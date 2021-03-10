@@ -4,6 +4,8 @@ class Player {
   float position;
   // Broj preostalih života.
   int lives = 4;
+  // Kod igrača
+  int no_player;
 
   // Pozicija glave koplja.
   float xSpear, ySpear;
@@ -11,19 +13,27 @@ class Player {
   boolean spearActive = false, spearUp = false;
 
 
-  Player(float _position) {
+  Player(float _position, int number) {
     position = _position;
     ySpear = gameHeight; // Na dnu prozora s igrom.
+    no_player = number;
   }
 
   // Iscrtavanje igrača na ekran. Za sada se samo crta kao 25x50 pravokutnik.
   void draw() {
     fill(0);
-
-    if (isLeft) position = position - 2;
-    if (isRight) position = position + 2;
-    if (isSpace && !spearActive)
-      activateSpear();
+    if (no_player == 1) {
+      if (isLeft) position = position - 2;
+      if (isRight) position = position + 2;
+      if (isSpace && !spearActive)
+        activateSpear();
+    }
+    if (no_player == 2) {
+      if (isA) position = position - 2;
+      if (isD) position = position + 2;
+      if (isS && !spearActive)
+        activateSpear();
+    }
     // Position je sredina sličice (pravokutnika).
     rect(position - 12.5, gameHeight - 50, 25, 50);
     // Nacrtaj koplje (ako je aktivno).
@@ -38,8 +48,8 @@ class Player {
   }
 
   void resetPosition() {
-    position = windowWidth/2 - 25;
-    // TODO: Promijeniti kada igraju dva igrača.
+    // Pozicija ovisi o kodu igrača i o ukupnom broju igrača:
+    position = no_player*windowWidth/(quantity+1) - 25;
   }
 
   // Ažuriraj koplje i sve što treba.

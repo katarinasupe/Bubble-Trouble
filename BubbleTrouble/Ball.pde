@@ -13,6 +13,9 @@ class Ball {
   // Ako je split bilo što različito od gameHeight,
   // to označava da je loptica tek nastala.
   float split;
+  
+  // Atribut koji pamti udara li u određenom trenutku lopta igrača.
+  boolean is_being_hit = false;
 
   Ball (float _xCenter, float _yCenter, int _sizeLevel) {
     sizeLevel = _sizeLevel;
@@ -87,7 +90,7 @@ class Ball {
     // Provjera je li bilo koja točka ispod glave koplja u radijusu
     // ove kugle.
     for (int i = (int)gameHeight; i >= ySpear; --i) {
-      if (sq(xSpear - xCenter) + sq(ySpear - yCenter) <= sq(radius))
+      if (sq(xSpear - xCenter) + sq(i - yCenter) <= sq(radius))
         return true;
     }
     return false;
