@@ -12,7 +12,7 @@ ArrayList<Player> players = new ArrayList<Player>();
 ArrayList<Ball> balls = new ArrayList<Ball>();
 
 //slike u MAINMENU
-PImage character, bubbleTrouble, redBall, torch, soundOn, soundOff;
+PImage character, bubbleTrouble, redBall, torch, soundOnImg, soundOffImg;
 PFont menuFont;
 PFont gameFont;
 
@@ -48,9 +48,9 @@ SoundFile getShootingSound(){
     return shootingSound;
 }
 
-boolean sound = true;
+boolean soundOn = true;
 boolean getSound() {
-  return sound;
+  return soundOn;
 }
 
 void setup() {
@@ -67,8 +67,8 @@ void setup() {
   bubbleTrouble = loadImage("bubbleTrouble.png");
   redBall = loadImage("redBall.png");
   torch = loadImage("torch.png");
-  soundOn = loadImage("soundOn.png");
-  soundOff = loadImage("soundOff.png");
+  soundOnImg = loadImage("soundOn.png");
+  soundOffImg = loadImage("soundOff.png");
   
   //učitavanje fonta za MAINMENU
   menuFont = loadFont("GoudyStout-28.vlw");
@@ -117,10 +117,10 @@ void draw() {
     image(torch, windowWidth/2.46, windowHeight/2);
     
     //Dodavanje gumba za gašenje zvukova
-    if(sound){
-      image(soundOn, windowWidth-80, 40);
+    if(soundOn){
+      image(soundOnImg, windowWidth-80, 40);
     } else {
-      image(soundOff, windowWidth-80, 40);
+      image(soundOffImg, windowWidth-80, 40);
     }
    
     
@@ -324,12 +324,12 @@ void mousePressed(){
   //Provjeravamo je li korisnik kliknuo na mute button
   if ((mouseX >= windowWidth - 100 && mouseX <= windowWidth - 80 + 30) && (mouseY >= 25 && mouseY <= 65)){
     
-    if(sound) {
-     sound = false;
+    if(soundOn) {
+     soundOn = false;
      introSong.pause(); 
     }
     else {
-     sound = true;
+     soundOn = true;
      introSong.play();
     }
   }
@@ -393,7 +393,7 @@ void ballSpearCollision() {
       if (balls.get(i).checkSpearCollision(player.xSpear, player.ySpear)) {
         player.resetSpear();
         if (balls.get(i).sizeLevel > 1) {
-          if(sound) {
+          if(soundOn) {
             player.stopSound(); //prestaje reprodukcija zvuka strelice
             collisionSound.play(); //reproduciramo zvuk pogotka
           }
