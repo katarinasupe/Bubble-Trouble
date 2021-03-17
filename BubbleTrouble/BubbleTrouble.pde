@@ -1,4 +1,7 @@
-// Veličina okvira za igru. //<>//
+ //<>//
+import processing.sound.*;
+
+// Veličina okvira za igru.
 final float gameWidth = 1024, gameHeight = 576;
 // Veličina prozora.
 final float windowWidth = 1280, windowHeight = 720; // Ako se mijenja, treba promijeniti size u setup().
@@ -36,6 +39,15 @@ enum MenuPick {
 //Na početku je odabrano polje "1 PLAYER"
 MenuPick menuPick = MenuPick.ONEPLAYER;
 
+SoundFile introSong;
+SoundFile shootingSound;
+SoundFile collisionSound;
+String path;
+
+SoundFile getShootingSound(){
+    return shootingSound;
+}
+
 void setup() {
   size(1280, 720);
   balls.clear();
@@ -56,6 +68,13 @@ void setup() {
   
   //učitavanje fonta za GAME
   gameFont = loadFont("GoudyStout-16.vlw");
+  
+  path = sketchPath("");
+  introSong = new SoundFile(this, path + "intro.mp3");
+  shootingSound = new SoundFile(this, path + "shooting.mp3");
+  collisionSound = new SoundFile(this, path + "collision.mp3");
+  introSong.play();
+  
 }
 
 void createPlayers() {
@@ -220,10 +239,12 @@ void draw() {
     }
     
     
-    }else if (state == State.INSTRUCTIONS) {
+  }else if (state == State.INSTRUCTIONS) {
     // TODO: Instructions.
+    introSong.stop();
   } else if (state == State.GAME) {
-   
+     
+    introSong.stop();
     // Provjeri kolizije.
     for (Player player : players) {
       if (player.spearActive)
@@ -341,6 +362,8 @@ void ballSpearCollision() {
       if (balls.get(i).checkSpearCollision(player.xSpear, player.ySpear)) {
         player.resetSpear();
         if (balls.get(i).sizeLevel > 1) {
+          player.stopSound(); //prestaje reprodukcija zvuka strelice
+          collisionSound.play(); //reproduciramo zvuk pogotka
           balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, 1, -3, balls.get(i).yCenter));
           balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, -1, -3, balls.get(i).yCenter));
         }

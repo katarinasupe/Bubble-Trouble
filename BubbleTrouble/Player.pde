@@ -1,3 +1,5 @@
+import processing.sound.*;
+
 // Klasa koja predstavlja igrača, uključujući koplje.
 class Player {
   // Pozicija igrača je određena x-koordinatom sredine sličice.
@@ -11,6 +13,9 @@ class Player {
   float xSpear, ySpear;
   // Koplje je aktivno/trenutno ide prema gore.
   boolean spearActive = false, spearUp = false;
+  
+  //zvuk koji se reproducira kad igrač izbaci koplje
+  SoundFile shootingSound = getShootingSound();
 
 
   Player(float _position, int number) {
@@ -63,8 +68,10 @@ class Player {
       else
         ySpear += 16;
       // Koplje se spustilo do kraja, postaje neaktivno.
-      if (ySpear >= gameHeight)
+      if (ySpear >= gameHeight){
         spearActive = false;
+        shootingSound.stop();
+      }
     }
   }
 
@@ -72,6 +79,7 @@ class Player {
     xSpear = position; // Koplje počinje na trenutnoj poziciji igrača.
     spearActive = true;
     spearUp = true;
+    shootingSound.play();
   }
 
   void resetSpear() {
@@ -81,5 +89,9 @@ class Player {
 
   boolean isSpearActive() { 
     return spearActive;
+  }
+  
+  void stopSound(){
+     shootingSound.stop();
   }
 }
