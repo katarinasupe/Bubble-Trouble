@@ -3,7 +3,7 @@ final float gameWidth = 1024, gameHeight = 576;
 // Veličina prozora.
 final float windowWidth = 1280, windowHeight = 720; // Ako se mijenja, treba promijeniti size u setup().
 // Postavljamo broj igrača i kreiramo listu u koju ćemo kasnije igrače pohranjivati.
-int quantity = 1;
+int quantity;
 ArrayList<Player> players = new ArrayList<Player>();
 // Lista u kojoj se čuvaju sve lopte trenutno na ekranu.
 ArrayList<Ball> balls = new ArrayList<Ball>();
@@ -14,7 +14,7 @@ PFont menuFont;
 PFont gameFont;
 
 boolean isLeft, isRight, isSpace, isA, isD, isS, isUp, isDown, isEnter;
-final int ENTER_CODE = 10; //moze biti problema s ovim
+final int ENTER_CODE = 10; // Moze biti problema s ovim
 
 // Moguća stanja programa. Ovisno o varijabli state, u draw()
 // se iscrtavaju različiti prozori.
@@ -66,16 +66,13 @@ void createPlayers() {
 }
 
 void draw() {
-  // Trenutno bi trebao raditi ENTER za ulazak u igru s jednim igračem
-  // TODO: Mijenjanje odabira polja s UP i DOWN (mijenjanje boja pravokutnika ili pomicanje baklji)
-  // te s obzirom na to mijenjanje menuPick i quantity
   if (state == State.MAINMENU) {   
-    //pushStyle() i popStyle() za očuvanje trenutnog stila i naknadno vraćanje istog
+    // pushStyle() i popStyle() za očuvanje trenutnog stila i naknadno vraćanje istog
     pushStyle();
-    //pozadina - neka siva boja
+    // Pozadina - neka siva boja
     background(190, 190, 190);
     
-    //crtanje vodoravnih i vertikalnih linija na pozadini (cigle) - treba još uljepšati
+    // Crtanje vodoravnih i vertikalnih linija na pozadini (cigle) - treba još uljepšati
     int horizontalLines = 9;
     int verticalLines = 8;
     stroke(226, 226, 226);
@@ -86,21 +83,21 @@ void draw() {
       line(i*windowWidth/verticalLines, 0, i * windowWidth/verticalLines, windowHeight);
     }
        
-    //dodavanje lika, crvene kugle i baklji
+    // Dodavanje lika, crvene kugle i baklji
     imageMode(CENTER);
     image(character, 2*windowWidth/3, windowHeight/2);
     image(redBall, windowWidth/4, windowHeight/4);
     image(torch, windowWidth/11 , windowHeight/2);
     image(torch, windowWidth/2.46, windowHeight/2);
   
-    //dodavanje i rotacija slike bubbleTrouble (tekst)
+    // Dodavanje i rotacija slike bubbleTrouble (tekst)
     pushMatrix();
     rotate(radians(-15));
     image(bubbleTrouble, windowWidth/5, windowHeight/3);
     popMatrix();
     
     //----MENU----
-    //vanjski žuti pravokutnik
+    // Vanjski žuti pravokutnik
     rectMode(RADIUS);
     stroke(183, 180, 16);
     strokeWeight(4);
@@ -109,41 +106,71 @@ void draw() {
     float rectY = 2*windowHeight/3 + 20;
     rect(rectX, rectY, windowWidth/8, windowHeight/4 - 15);
     rectMode(CENTER); 
-    //ukupna visina pravokutnika koji sadržava polja za odabir
+    // Ukupna visina pravokutnika koji sadržava polja za odabir
     float totalHeight = windowHeight/2 - 50;
-    //postoje 4 polja za odabir, svako visine fieldHeight
+    // Postoje 4 polja za odabir, svako visine fieldHeight
     float fieldHeight = totalHeight/4;
-    //i će određivati y-koordinatu centra svakog polja za odabir
+    // i će određivati y-koordinatu centra svakog polja za odabir
     float i = fieldHeight/2;
     while (i < totalHeight) {
-      //crtanje crvenih polja za odabir (pravokutnika)
+      // Crtanje crvenih polja za odabir (pravokutnika)
       fill(224, 0, 0);
       rect(rectX, rectY - totalHeight/2 + i, rectX - 20, fieldHeight);
-      //pisanje teksta u odgovarajuće pravokutnike
+      
+      // Pisanje teksta u odgovarajuće pravokutnike
       fill(255, 245, 0);
       textAlign(CENTER, CENTER);
       textFont(menuFont);
-      if(i < fieldHeight)
-        text("1 PLAYER", rectX, rectY - totalHeight/2 + i);
-      else if(i < fieldHeight*2)
+      // Mijenjanje boje pozadine trenutno odabranog polja
+      // Prvo polje - 1 PLAYER
+      if (i < fieldHeight) {
+        if (menuPick == MenuPick.ONEPLAYER) {
+          fill(221, 117, 87);
+          rect(rectX, rectY - totalHeight/2 + i, rectX - 20, fieldHeight);
+        }
+          fill(255, 245, 0);
+          text("1 PLAYER", rectX, rectY - totalHeight/2 + i);
+      }
+      // Drugo polje - 2 PLAYERS
+      else if (i < fieldHeight*2) {
+        if (menuPick == MenuPick.TWOPLAYERS) {
+          fill(221, 117, 87);
+          rect(rectX, rectY - totalHeight/2 + i, rectX - 20, fieldHeight);
+        }
+        fill(255, 245, 0);
         text("2 PLAYERS", rectX, rectY - totalHeight/2 + i);
-      else if(i < fieldHeight*3)
+      }
+      // Treće polje - CONTROLS
+      else if (i < fieldHeight*3) {
+        if (menuPick == MenuPick.CONTROLS) {
+          fill(221, 117, 87);
+          rect(rectX, rectY - totalHeight/2 + i, rectX - 20, fieldHeight);
+        }
+        fill(255, 245, 0);
         text("CONTROLS", rectX, rectY - totalHeight/2 + i);
-      else
+      }
+      // Četvrto polje - QUIT
+      else {
+        if (menuPick == MenuPick.QUIT) {
+          fill(221, 117, 87);
+          rect(rectX, rectY - totalHeight/2 + i, rectX - 20, fieldHeight);
+        }
+        fill(255, 245, 0);
         text("QUIT", rectX, rectY - totalHeight/2 + i);
+      }
       //pomak na iduće polje za odabir
       i += fieldHeight;
     }
     popStyle();
     
+    // Pritisak gumba Enter
     if (isEnter) {
-      //print("enter");
-      if (menuPick == MenuPick.ONEPLAYER){
+      if (menuPick == MenuPick.ONEPLAYER) {
         quantity = 1;
         createPlayers();
         state = State.GAME;
       }
-      else if (menuPick == MenuPick.TWOPLAYERS){
+      else if (menuPick == MenuPick.TWOPLAYERS) {
         quantity = 2;
         createPlayers();
         state = State.GAME;
@@ -152,7 +179,48 @@ void draw() {
       else exit();
     }
     
-  } else if (state == State.INSTRUCTIONS) {
+    // Pritisak strelice dolje
+    if (isDown) {
+      if (menuPick == MenuPick.ONEPLAYER) {
+        menuPick = MenuPick.TWOPLAYERS;
+        isDown = false; //inace propada, tj. ulazi u sve uvjete redom
+      }
+      else if (menuPick == MenuPick.TWOPLAYERS) {
+        menuPick = MenuPick.CONTROLS;
+        isDown = false;
+      }
+      else if (menuPick == MenuPick.CONTROLS) {
+        menuPick = MenuPick.QUIT;
+        isDown = false;
+      }
+      else {
+        menuPick = MenuPick.ONEPLAYER;  
+        isDown = false;
+      }
+    }
+    
+    // Pritisak strelice gore
+    if (isUp) {
+      if (menuPick == MenuPick.ONEPLAYER) {
+        menuPick = MenuPick.QUIT;
+        isUp = false;
+      }
+      else if (menuPick == MenuPick.TWOPLAYERS) {
+        menuPick = MenuPick.ONEPLAYER;
+        isUp = false;
+      }
+      else if (menuPick == MenuPick.CONTROLS) {
+        menuPick = MenuPick.TWOPLAYERS;
+        isUp = false;
+      }
+      else {
+        menuPick = MenuPick.CONTROLS; 
+        isUp = false;
+      }
+    }
+    
+    
+    }else if (state == State.INSTRUCTIONS) {
     // TODO: Instructions.
   } else if (state == State.GAME) {
    
