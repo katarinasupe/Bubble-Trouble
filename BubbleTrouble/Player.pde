@@ -16,6 +16,7 @@ class Player {
   
   //zvuk koji se reproducira kad igrač izbaci koplje
   SoundFile shootingSound = getShootingSound();
+  boolean soundOn = getSound();
 
 
   Player(float _position, int number) {
@@ -79,7 +80,8 @@ class Player {
     xSpear = position; // Koplje počinje na trenutnoj poziciji igrača.
     spearActive = true;
     spearUp = true;
-    shootingSound.play();
+    if(soundOn)
+      shootingSound.play();
   }
 
   void resetSpear() {

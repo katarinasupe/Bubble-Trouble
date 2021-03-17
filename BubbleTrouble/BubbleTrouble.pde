@@ -12,7 +12,7 @@ ArrayList<Player> players = new ArrayList<Player>();
 ArrayList<Ball> balls = new ArrayList<Ball>();
 
 //slike u MAINMENU
-PImage character, bubbleTrouble, redBall, torch;
+PImage character, bubbleTrouble, redBall, torch, soundOn, soundOff;
 PFont menuFont;
 PFont gameFont;
 
@@ -48,6 +48,11 @@ SoundFile getShootingSound(){
     return shootingSound;
 }
 
+boolean sound = true;
+boolean getSound() {
+  return sound;
+}
+
 void setup() {
   size(1280, 720);
   balls.clear();
@@ -62,6 +67,8 @@ void setup() {
   bubbleTrouble = loadImage("bubbleTrouble.png");
   redBall = loadImage("redBall.png");
   torch = loadImage("torch.png");
+  soundOn = loadImage("soundOn.png");
+  soundOff = loadImage("soundOff.png");
   
   //učitavanje fonta za MAINMENU
   menuFont = loadFont("GoudyStout-28.vlw");
@@ -108,7 +115,15 @@ void draw() {
     image(redBall, windowWidth/4, windowHeight/4);
     image(torch, windowWidth/11 , windowHeight/2);
     image(torch, windowWidth/2.46, windowHeight/2);
-  
+    
+    //Dodavanje gumba za gašenje zvukova
+    if(sound){
+      image(soundOn, windowWidth-80, 40);
+    } else {
+      image(soundOff, windowWidth-80, 40);
+    }
+   
+    
     // Dodavanje i rotacija slike bubbleTrouble (tekst)
     pushMatrix();
     rotate(radians(-15));
@@ -304,6 +319,22 @@ void keyReleased() {
   }
 }
 
+void mousePressed(){ 
+  
+  //Provjeravamo je li korisnik kliknuo na mute button
+  if ((mouseX >= windowWidth - 100 && mouseX <= windowWidth - 80 + 30) && (mouseY >= 25 && mouseY <= 65)){
+    
+    if(sound) {
+     sound = false;
+     introSong.pause(); 
+    }
+    else {
+     sound = true;
+     introSong.play();
+    }
+  }
+}
+
 void setMove(int k, boolean b) {
   // Standardne left-right tipke za prvog igrača.
   switch (k) {
@@ -362,8 +393,10 @@ void ballSpearCollision() {
       if (balls.get(i).checkSpearCollision(player.xSpear, player.ySpear)) {
         player.resetSpear();
         if (balls.get(i).sizeLevel > 1) {
-          player.stopSound(); //prestaje reprodukcija zvuka strelice
-          collisionSound.play(); //reproduciramo zvuk pogotka
+          if(sound) {
+            player.stopSound(); //prestaje reprodukcija zvuka strelice
+            collisionSound.play(); //reproduciramo zvuk pogotka
+          }
           balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, 1, -3, balls.get(i).yCenter));
           balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, -1, -3, balls.get(i).yCenter));
         }
