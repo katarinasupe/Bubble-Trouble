@@ -93,7 +93,7 @@ class Player {
     return spearActive;
   }
   
-  void stopSound(){
+  void stopSpearSound(){
      shootingSound.stop();
   }
 }

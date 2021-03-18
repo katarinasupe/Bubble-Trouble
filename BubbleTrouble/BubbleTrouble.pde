@@ -42,6 +42,8 @@ MenuPick menuPick = MenuPick.ONEPLAYER;
 SoundFile introSong;
 SoundFile shootingSound;
 SoundFile collisionSound;
+SoundFile switchSound;
+SoundFile punchSound;
 String path;
 
 SoundFile getShootingSound(){
@@ -52,6 +54,8 @@ boolean soundOn = true;
 boolean getSound() {
   return soundOn;
 }
+
+boolean lostLife = false;
 
 void setup() {
   size(1280, 720);
@@ -80,6 +84,8 @@ void setup() {
   introSong = new SoundFile(this, path + "intro.mp3");
   shootingSound = new SoundFile(this, path + "shooting.mp3");
   collisionSound = new SoundFile(this, path + "collision.mp3");
+  switchSound = new SoundFile(this, path + "switch.mp3");
+  punchSound = new SoundFile(this, path + "punch.mp3");
   introSong.play();
   
 }
@@ -199,6 +205,7 @@ void draw() {
     
     // Pritisak gumba Enter
     if (isEnter) {
+      if(soundOn) switchSound.play(); 
       if (menuPick == MenuPick.ONEPLAYER) {
         quantity = 1;
         createPlayers();
@@ -258,7 +265,10 @@ void draw() {
     // TODO: Instructions.
     introSong.stop();
   } else if (state == State.GAME) {
-     
+     if(lostLife) {
+       delay(500);
+       lostLife = false;
+     }
     introSong.stop();
     // Provjeri kolizije.
     for (Player player : players) {
@@ -394,7 +404,7 @@ void ballSpearCollision() {
         player.resetSpear();
         if (balls.get(i).sizeLevel > 1) {
           if(soundOn) {
-            player.stopSound(); //prestaje reprodukcija zvuka strelice
+            player.stopSpearSound(); //prestaje reprodukcija zvuka strelice
             collisionSound.play(); //reproduciramo zvuk pogotka
           }
           balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, 1, -3, balls.get(i).yCenter));
@@ -416,13 +426,21 @@ void ballPlayerCollision() {
       if (current.checkPlayerCollision(player.position)) {
         if (!current.is_being_hit) {
           --player.lives;
+          if(soundOn) {
+            player.stopSpearSound();
+            punchSound.play();
+          }
           // Ako je kolizija tek počela, postavljamo atribut na true.
           // Ovime izbjegavao da se odjednom oduzme nekoliko života umjesto jednog.
           current.is_being_hit = true;
+          player.spearActive = false; //maknemo i strelice od tog igrača
+          lostLife = true;
+          
         }
         // Iako je samo jedan igrač pogođen, pozicije se resetiraju za oba igrača
         for (Player player_: players)
           player_.resetPosition();
+          
         // Ponovno postavljamo kugle
         balls.clear();
         balls.add(new Ball(windowWidth/2, gameHeight/2, 6));
