@@ -383,12 +383,24 @@ void setMove(char k, boolean b) {
   case 'a':
     isA = b;
     return;
-
+    
+  case 'A':
+    isA = b;
+    return;
+    
   case 'd':
     isD = b;
     return;
   
+  case 'D':
+    isD = b;
+    return;
+  
   case 's':
+    isS = b;
+    return;
+    
+  case 'S':
     isS = b;
     return;
   }
@@ -428,7 +440,7 @@ void ballPlayerCollision() {
           --player.lives;
           if(soundOn) {
             player.stopSpearSound();
-            punchSound.play();
+            punchSound.play();  
           }
           // Ako je kolizija tek počela, postavljamo atribut na true.
           // Ovime izbjegavao da se odjednom oduzme nekoliko života umjesto jednog.
