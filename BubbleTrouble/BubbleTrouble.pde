@@ -322,7 +322,7 @@ void keyReleased() {
 void mousePressed(){ 
   
   //Provjeravamo je li korisnik kliknuo na mute button
-  if ((mouseX >= windowWidth - 100 && mouseX <= windowWidth - 80 + 30) && (mouseY >= 25 && mouseY <= 65)){
+  if ((mouseX >= (windowWidth - 80-20) && mouseX <= (windowWidth - 80 + 20)) && (mouseY >= 25 && mouseY <= 55)){
     
     if(soundOn) {
      soundOn = false;
