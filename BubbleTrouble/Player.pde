@@ -6,8 +6,10 @@ class Player {
   float position;
   // Broj preostalih života.
   int lives = 4;
-  // Kod igrača
+  // Kod igrača.
   int no_player;
+  // Broj ostvarenih bodova.
+  int points = 0;
 
   // Pozicija glave koplja.
   float xSpear, ySpear;

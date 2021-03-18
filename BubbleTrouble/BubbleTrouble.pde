@@ -10,6 +10,16 @@ int quantity;
 ArrayList<Player> players = new ArrayList<Player>();
 // Lista u kojoj se čuvaju sve lopte trenutno na ekranu.
 ArrayList<Ball> balls = new ArrayList<Ball>();
+// Varijabla koja pohranjuje istinu ako je igra gotova, inače laž
+boolean is_game_over = false;
+// Varijabla koja pamti je li u tijeku čekanje ponovnog početka igre.
+boolean get_ready = false;
+// Varijable koja pamti je li završen level:
+boolean level_done = false;
+// Varijabla u kojoj pohranjujemo mogući broj bodova.
+int max_points;
+// Varijable za pohranjivanje vremena (dovoljno je uzeti minute i sekunde):
+int minutes, seconds, delay_millisecs, getReady_millisecs;
 
 //slike u MAINMENU
 PImage character, bubbleTrouble, redBall, torch, soundOnImg, soundOffImg;
@@ -59,12 +69,13 @@ boolean lostLife = false;
 
 void setup() {
   size(1280, 720);
+  is_game_over = false;
+  level_done = false;
   balls.clear();
-  balls.add(new Ball(windowWidth/2, gameHeight/2, 4));
-  // Ovisno o postavljenom broju igrača, popunjavamo listu i podešavamo početne pozicije
- // for (int i = 0; i < quantity; i++)
- //   players.add(new Player((i+1)*windowWidth/(quantity+1)-25, i+1));
- //   ellipseMode(RADIUS); // Crtanje kružnica kao (srediste.x, srediste.y, radijus).
+  balls.add(new Ball(windowWidth/2, gameHeight/2, 4, 4));
+  // Pamtimo vrijeme početka radi kasnijeg računanja bodova:
+  minutes = minute();
+  seconds = second();
   
   //učitavanje slika za MAINMENU
   character = loadImage("character.png");
@@ -91,10 +102,41 @@ void setup() {
 }
 
 void createPlayers() {
-   // Ovisno o postavljenom broju igrača, popunjavamo listu i podešavamo početne pozicije
+  // Ovisno o postavljenom broju igrača, popunjavamo listu i podešavamo početne pozicije
+  players.clear();
   for (int i = 0; i < quantity; i++)
     players.add(new Player((i+1)*windowWidth/(quantity+1)-25, i+1));
     ellipseMode(RADIUS); // Crtanje kružnica kao (srediste.x, srediste.y, radijus).
+}
+
+// Pomoćna funkcija za pisanje poruka tokom igre:
+void write_dummy_text(String _text) {
+  textAlign(CENTER, CENTER);
+  stroke(183, 180, 16);
+  strokeWeight(4);
+  fill(255, 245, 0);
+  int _width = 450;
+  float rectX = windowWidth/2;
+  float rectY = windowHeight/2;
+  rect(rectX-_width/2, rectY-40, _width, 80);
+  fill(224, 0, 0);
+  rectX = windowWidth/2-_width/2+8;
+  rectY = windowHeight/2-32;
+  rect(rectX, rectY, _width-16, 64);
+  fill(255, 245, 0);
+  textSize(25);
+  text(_text, windowWidth/2, windowHeight/2);
+  fill(255);
+  stroke(0);
+  strokeWeight(1);
+}
+
+// Funkcija kojom ponovno postavljamo brzine loptica
+void restart_the_balls() {
+  for (Ball ball : balls) {
+    ball.xVelocity = 1;
+    ball.yVelocity = 3;
+  }
 }
 
 void draw() {
@@ -205,16 +247,18 @@ void draw() {
     
     // Pritisak gumba Enter
     if (isEnter) {
-      if(soundOn) switchSound.play(); 
+      if(soundOn) switchSound.play();
       if (menuPick == MenuPick.ONEPLAYER) {
         quantity = 1;
         createPlayers();
         state = State.GAME;
+        setup();
       }
       else if (menuPick == MenuPick.TWOPLAYERS) {
         quantity = 2;
         createPlayers();
         state = State.GAME;
+        setup();
       }
       else if (menuPick == MenuPick.CONTROLS) state = State.INSTRUCTIONS;
       else exit();
@@ -261,14 +305,12 @@ void draw() {
     }
     
     
-  }else if (state == State.INSTRUCTIONS) {
+  }
+  else if (state == State.INSTRUCTIONS) {
     // TODO: Instructions.
     introSong.stop();
-  } else if (state == State.GAME) {
-     if(lostLife) {
-       delay(500);
-       lostLife = false;
-     }
+  } 
+  else if (state == State.GAME) {
     introSong.stop();
     // Provjeri kolizije.
     for (Player player : players) {
@@ -293,15 +335,74 @@ void draw() {
     textFont(gameFont);
     int j = 0;
     for (Player player : players) {
-      text("Player " + (j+1) + ":  " + player.lives, 200*j, windowHeight-20 );
+      if (player.lives >= 0) text("Player " + (j+1) + ":  " + player.lives, 225*j+80, windowHeight-20 );
+      else text("Player " + (j+1) + ":  0", 225*j+80, windowHeight-20 );
       j++;
     }
   
     // Nacrtaj igrače i lopte.
     for (Player player: players)
-      player.draw();
+      if (player.lives != 0) player.draw();
     for (Ball ball : balls)
       ball.draw();
+    
+    // Ako je igrač izgubio život, ali još uvijek ima preostale živote:
+    if(lostLife && !is_game_over) {
+      // Pišemo prikladni tekst za kratak period vremena:
+      if (millis() - delay_millisecs <= 500)
+        write_dummy_text("OUCH");
+      else {
+        lostLife = false;
+        // Nakon tog vremena, ponovno postavimo pozicije igrača.
+        for (Player player_: players)
+          player_.resetPosition();
+        // Ponovno postavljamo kugle.
+        balls.clear();
+        balls.add(new Ball(windowWidth/2, gameHeight/2, 4, 4));
+        // Ponovno postavljamo bodove
+        // ------------- TODO: prilagoditi između levela (jer se zbrajaju bodovi za sve levele)----------
+        // ------------------- Vjv će biti ok dodati varijablu player.overall_points gdje ćemo nadodavati bodove iz levela
+        // ------------------- varijabla player.points će onda biti preimenovana u player.level_points
+        for (Player player : players) player.points = 0;
+        // Ponovno pokrećemo vrijeme:
+        minutes = minute();
+        seconds = second();
+        // Naznačimo da je sad trenutak kad se igrač treba spremati za ponovni početak igre.
+        get_ready = true;
+        getReady_millisecs = millis();
+        // I ponovno 'pauziramo' igru (tj zaustavimo nove loptice).
+        pause_game();
+      }
+     }
+     
+     if(get_ready) {
+       // Opet određeni kratki interval upozravamo igrača da se spremi za novi pokušaj.
+       if (millis() - getReady_millisecs <= 500)
+        write_dummy_text("GET READY");
+       else {
+         // Nakon tog vremena, ponovno pokrenemo lopte.
+         get_ready = false;
+         restart_the_balls();
+       }
+     }
+    
+    // Ako je igra gotova, pišemo odgovarajuću poruku:
+    if(is_game_over) {
+      write_dummy_text("GAME OVER");
+      if(isEnter) {
+        state = State.MAINMENU;
+        isEnter = false;
+      }
+    }
+    
+    // Ako je level pobjeđen, prikazuje se odgovarajuća poruka:
+    if (level_done) {
+      write_dummy_text("Level passed " + players.get(0).points);
+      if(isEnter) {
+        state = State.MAINMENU;
+        isEnter = false;
+      }
+    }
   }
 }
 
@@ -347,12 +448,16 @@ void mousePressed(){
 
 void setMove(int k, boolean b) {
   // Standardne left-right tipke za prvog igrača.
+  // Ako je igra gotova ili je tama izgubljen život ili mso u get-ready fazi,
+  // ne želimo da se igrači mogu i dalje micati.
   switch (k) {
   case LEFT:
+    if (is_game_over || lostLife || get_ready || level_done) return;
     isLeft = b;
     return;
 
   case RIGHT:
+    if (is_game_over || lostLife || get_ready || level_done) return;
     isRight = b;
     return;
     
@@ -373,6 +478,9 @@ void setMove(int k, boolean b) {
 }
 
 void setMove(char k, boolean b) {
+  // Ako je igra gotova ili je tama izgubljen život ili mso u get-ready fazi,
+  // ne želimo da se igrači mogu i dalje micati.
+  if (is_game_over || lostLife || get_ready || level_done) return;
   switch (k) {
   // Tipka za koplje prvog igrača.
   case ' ':
@@ -387,11 +495,11 @@ void setMove(char k, boolean b) {
   case 'A':
     isA = b;
     return;
-    
+
   case 'd':
     isD = b;
     return;
-  
+    
   case 'D':
     isD = b;
     return;
@@ -406,6 +514,21 @@ void setMove(char k, boolean b) {
   }
 }
 
+// Funkcija koja obrađuje kraj (pobjedu) levela:
+void levelWon() {
+  level_done = true;
+  pause_game();
+  int seconds_passed = second() - seconds;
+  int minutes_passed = minute() - minutes;
+  if (seconds_passed < 0) seconds_passed += 60;
+  if (minutes_passed < 0) minutes_passed += 60;
+  for (Player player : players) {
+    player.points += (60-seconds_passed)*5;
+  }
+  
+}
+
+
 // Funkcija za detekciju kolizije lopti i koplja.
 void ballSpearCollision() {
   // Za svakog igrača (prva for petlja) i svaku loptu (druga for petlja)
@@ -413,24 +536,46 @@ void ballSpearCollision() {
   for (Player player : players) {
     for (int i = 0; i < balls.size(); ++i) {
       if (balls.get(i).checkSpearCollision(player.xSpear, player.ySpear)) {
+        player.points += (balls.get(i).origin-balls.get(i).sizeLevel+1)*10;
+        print(player.points, "\n");
         player.resetSpear();
         if (balls.get(i).sizeLevel > 1) {
           if(soundOn) {
             player.stopSpearSound(); //prestaje reprodukcija zvuka strelice
             collisionSound.play(); //reproduciramo zvuk pogotka
           }
-          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, 1, -3, balls.get(i).yCenter));
-          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, -1, -3, balls.get(i).yCenter));
+          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, 1, -3, balls.get(i).yCenter, balls.get(i).origin));
+          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, -1, -3, balls.get(i).yCenter, balls.get(i).origin));
         }
         balls.remove(i);
+        if (balls.isEmpty()) levelWon();
         return;
       }
     }
   }
 }
 
+// Funkcija koja pauzira igru.
+void pause_game() {
+  // Brzinu svih loptica postavljamo na 0, tako ih možemo 'pauzirati' pri završetku igre:
+  for (Ball ball : balls) {
+    ball.xVelocity = 0;
+    ball.yVelocity = 0;
+  }
+  // Završavamo efekte svih tipki:
+  isLeft = false; isRight = false; isSpace = false;
+  isA = false; isS = false; isD = false;
+}
+
+// Funkcija koja prikazuje završni rezultat i preusmjerava na main menu:
+void game_over() {
+  is_game_over = true;
+  pause_game();
+}
+
 // Funkcija za detekciju kolizije lopti i igrača.
 void ballPlayerCollision() {
+  if (is_game_over) return;
   // Također prolazimo po svim igračima i loptama i provjeravamo dolazi li do kolizije.
   for (Player player : players) {
     for (int i = 0; i < balls.size(); ++i) {
@@ -440,27 +585,31 @@ void ballPlayerCollision() {
           --player.lives;
           if(soundOn) {
             player.stopSpearSound();
-            punchSound.play();  
+            punchSound.play();
           }
           // Ako je kolizija tek počela, postavljamo atribut na true.
           // Ovime izbjegavao da se odjednom oduzme nekoliko života umjesto jednog.
           current.is_being_hit = true;
-          player.spearActive = false; //maknemo i strelice od tog igrača
+          player.resetSpear(); //maknemo i strelice od tog igrača
+          delay_millisecs = millis();
+          pause_game();
           lostLife = true;
-          
         }
-        // Iako je samo jedan igrač pogođen, pozicije se resetiraju za oba igrača
+        // Varijabla kojom brojimo koliko igrača je izgubilo:
+        int no_of_over = 0;
         for (Player player_: players)
-          player_.resetPosition();
-          
-        // Ponovno postavljamo kugle
-        balls.clear();
-        balls.add(new Ball(windowWidth/2, gameHeight/2, 6));
+          if (player_.lives <= 0) no_of_over += 1;
+        // Ako su svi igrači izgubili igru, idemo na game_over:
+        if (no_of_over == players.size()) {
+          // Mali trik: smanjujemo broj života zadnjeg igrača na -1,
+          // kako bismo ga ipak mogli crtati u sudaru s lopticom pri potpunom gubitku igre. 
+          --player.lives;
+          game_over();
+          return;
+        }
 
-        // TODO: Game over.
-        //       Ali, ako jedan igrač izgubi, drugi još ostaje!
-        // if (player.lives <= 0) setup();
-        
+        // Ali, ako jedan igrač izgubi, drugi još ostaje!
+        if (player.lives <= 0) no_of_over += 1;
       }
       else current.is_being_hit = false; // Ako kolizije više nema, postavljamo atribut na false.
     }

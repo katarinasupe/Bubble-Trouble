@@ -16,9 +16,13 @@ class Ball {
   
   // Atribut koji pamti udara li u određenom trenutku lopta igrača.
   boolean is_being_hit = false;
+  
+  // Atribut koji će pamtiti koje razine je bila 'parent' loptica (potrebno za računanje bodova).
+  int origin;
 
-  Ball (float _xCenter, float _yCenter, int _sizeLevel) {
+  Ball (float _xCenter, float _yCenter, int _sizeLevel, int _origin) {
     sizeLevel = _sizeLevel;
+    origin = _origin;
     radius = sizeLevel * 10;
     xCenter = _xCenter; 
     yCenter = _yCenter;
@@ -27,8 +31,9 @@ class Ball {
     split = gameHeight;
   }
 
-  Ball (float _xCenter, float _yCenter, int _sizeLevel, float _xVelocity, float _yVelocity, float _split) {
+  Ball (float _xCenter, float _yCenter, int _sizeLevel, float _xVelocity, float _yVelocity, float _split, int _origin) {
     sizeLevel = _sizeLevel;
+    origin = _origin;
     radius = sizeLevel * 10;
     xCenter = _xCenter; 
     yCenter = _yCenter;
