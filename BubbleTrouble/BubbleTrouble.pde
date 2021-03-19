@@ -30,6 +30,9 @@ PFont gameFont;
 ArrayList<PImage> player1_images;
 ArrayList<PImage> player2_images;
 
+// Slika koplja.
+PImage spearImg;
+
 boolean isLeft, isRight, isSpace, isA, isD, isS, isUp, isDown, isEnter;
 final int ENTER_CODE = 10; // Moze biti problema s ovim
 
@@ -120,7 +123,15 @@ void setup() {
     player2_images.add(loadImage("player2_back_shield.png"));//3
     player2_images.add(loadImage("player2_left_shield.png"));//4
     player2_images.add(loadImage("player2_right_shield.png"));//5 
-  }  
+  }
+  
+  // Učitavanje slike koplja.
+  spearImg = loadImage("spear.png");
+  // Računanje visine koplja tako da slika zadrži aspect
+  // ratio prema varijabli spearImgWidth zadanoj u Player.pde.
+  spearImgHeight = ((float)spearImg.height / spearImg.width) * spearImgWidth;
+  // Odmah smanji sliku.
+  spearImg.resize((int)spearImgWidth, (int)spearImgHeight); 
 }
 
 void createPlayers() {
@@ -367,6 +378,9 @@ void draw() {
       if (player.lives != 0) player.draw();
     for (Ball ball : balls)
       ball.draw();
+      
+    // TODO: Trenutno će koplje "izlaziti" iz okvira igre pa treba još
+    // jednom iscrtati pozadinu kad se ona doda.
     
     // Ako je igrač izgubio život, ali još uvijek ima preostale živote:
     if(lostLife && !is_game_over) {
@@ -474,10 +488,11 @@ void mousePressed(){
 void setMove(int k, boolean b) {
   // Standardne left-right tipke za prvog igrača.
   // Ako je igra gotova ili je tama izgubljen život ili mso u get-ready fazi,
-  // ne želimo da se igrači mogu i dalje micati.
+  // ne želimo da se igrači mogu i dalje micati. Isto vrijedi i ako trenutno
+  // nismo u igri (lijevo-desno se ne koristi u meniju).
   switch (k) {
   case LEFT:
-    if (is_game_over || lostLife || get_ready || level_done) return;
+    if (is_game_over || lostLife || get_ready || level_done || state != State.GAME) return;
     isLeft = b;
     if (b)
       players.get(0).orientation = PlayerOrientation.LEFT;
@@ -486,7 +501,7 @@ void setMove(int k, boolean b) {
     return;
 
   case RIGHT:
-    if (is_game_over || lostLife || get_ready || level_done) return;
+    if (is_game_over || lostLife || get_ready || level_done || state != State.GAME) return;
     isRight = b;
     if (b)
       players.get(0).orientation = PlayerOrientation.RIGHT;
@@ -512,8 +527,13 @@ void setMove(int k, boolean b) {
 
 void setMove(char k, boolean b) {
   // Ako je igra gotova ili je tama izgubljen život ili mso u get-ready fazi,
-  // ne želimo da se igrači mogu i dalje micati.
-  if (is_game_over || lostLife || get_ready || level_done) return;
+  // ne želimo da se igrači mogu i dalje micati. Isto vrijedi i ako trenutno
+  // nismo u igri.
+  
+  // NAPOMENA: Ako se dodaju neke kontrole (koje se koriste izvan same igre) ovdje, treba
+  // ovaj state != State.GAME prebaciti unutra jer inače pritisak tipki neće imati
+  // nikakav učinak.
+  if (is_game_over || lostLife || get_ready || level_done || state != State.GAME) return;
   switch (k) {
   // Tipka za koplje prvog igrača.
   case ' ':
