@@ -26,6 +26,10 @@ PImage character, bubbleTrouble, redBall, torch, soundOnImg, soundOffImg;
 PFont menuFont;
 PFont gameFont;
 
+//slike igrača
+ArrayList<PImage> player1_images;
+ArrayList<PImage> player2_images;
+
 boolean isLeft, isRight, isSpace, isA, isD, isS, isUp, isDown, isEnter;
 final int ENTER_CODE = 10; // Moze biti problema s ovim
 
@@ -99,6 +103,24 @@ void setup() {
   punchSound = new SoundFile(this, path + "punch.mp3");
   introSong.play();
   
+  //slike igrača
+  player1_images = new ArrayList<PImage>(); 
+  player1_images.add(loadImage("player1_back.png"));//0
+  player1_images.add(loadImage("player1_left.png"));//1
+  player1_images.add(loadImage("player1_right.png"));//2
+  player1_images.add(loadImage("player1_back_shield.png"));//3
+  player1_images.add(loadImage("player1_left_shield.png"));//4
+  player1_images.add(loadImage("player1_right_shield.png"));//5
+  
+  if(quantity == 2) {
+    player2_images = new ArrayList<PImage>();
+    player2_images.add(loadImage("player2_back.png"));//0
+    player2_images.add(loadImage("player2_left.png"));//1
+    player2_images.add(loadImage("player2_right.png"));//2
+    player2_images.add(loadImage("player2_back_shield.png"));//3
+    player2_images.add(loadImage("player2_left_shield.png"));//4
+    player2_images.add(loadImage("player2_right_shield.png"));//5 
+  }  
 }
 
 void createPlayers() {
@@ -354,8 +376,11 @@ void draw() {
       else {
         lostLife = false;
         // Nakon tog vremena, ponovno postavimo pozicije igrača.
-        for (Player player_: players)
+        for (Player player_: players){
           player_.resetPosition();
+          player_.resetOrientation();
+          player_.resetState();
+        }
         // Ponovno postavljamo kugle.
         balls.clear();
         balls.add(new Ball(windowWidth/2, gameHeight/2, 4, 4));
@@ -454,11 +479,19 @@ void setMove(int k, boolean b) {
   case LEFT:
     if (is_game_over || lostLife || get_ready || level_done) return;
     isLeft = b;
+    if (b)
+      players.get(0).orientation = PlayerOrientation.LEFT;
+    else
+      players.get(0).orientation = PlayerOrientation.BACK;
     return;
 
   case RIGHT:
     if (is_game_over || lostLife || get_ready || level_done) return;
     isRight = b;
+    if (b)
+      players.get(0).orientation = PlayerOrientation.RIGHT;
+    else
+      players.get(0).orientation = PlayerOrientation.BACK;
     return;
     
   // gore, dolje za pomicanje odabira u meniju te Enter (10) za odabir
@@ -490,18 +523,34 @@ void setMove(char k, boolean b) {
   // Sve tipke za drugog igrača: a-lijevo, d-desno, s-koplje
   case 'a':
     isA = b;
+    if (b)
+      players.get(1).orientation = PlayerOrientation.LEFT;
+    else
+      players.get(1).orientation = PlayerOrientation.BACK;
     return;
     
   case 'A':
     isA = b;
+    if (b)
+      players.get(1).orientation = PlayerOrientation.LEFT;
+    else
+      players.get(1).orientation = PlayerOrientation.BACK;
     return;
 
   case 'd':
     isD = b;
+    if (b)
+      players.get(1).orientation = PlayerOrientation.RIGHT;
+    else
+      players.get(1).orientation = PlayerOrientation.BACK;
     return;
     
   case 'D':
     isD = b;
+    if (b)
+      players.get(1).orientation = PlayerOrientation.RIGHT;
+    else
+      players.get(1).orientation = PlayerOrientation.BACK;
     return;
   
   case 's':

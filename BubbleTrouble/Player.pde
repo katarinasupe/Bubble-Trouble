@@ -1,5 +1,15 @@
 import processing.sound.*;
 
+enum PlayerOrientation {
+  BACK,
+  LEFT,
+  RIGHT
+}
+enum PlayerState {
+  REGULAR,
+  SHIELD
+}
+
 // Klasa koja predstavlja igrača, uključujući koplje.
 class Player {
   // Pozicija igrača je određena x-koordinatom sredine sličice.
@@ -19,15 +29,21 @@ class Player {
   //zvuk koji se reproducira kad igrač izbaci koplje
   SoundFile shootingSound = getShootingSound();
   boolean soundOn = getSound();
+  
+  private PlayerOrientation orientation;
+  private PlayerState state;
 
 
   Player(float _position, int number) {
     position = _position;
     ySpear = gameHeight; // Na dnu prozora s igrom.
     no_player = number;
+    
+    this.orientation = PlayerOrientation.BACK;
+    this.state = PlayerState.REGULAR;
   }
 
-  // Iscrtavanje igrača na ekran. Za sada se samo crta kao 25x50 pravokutnik.
+  // Iscrtavanje igrača na ekran.
   void draw() {
     fill(0);
     if (no_player == 1) {
@@ -42,8 +58,32 @@ class Player {
       if (isS && !spearActive)
         activateSpear();
     }
-    // Position je sredina sličice (pravokutnika).
-    rect(position - 12.5, gameHeight - 50, 25, 50);
+    
+    int type = 0;
+    switch(state){
+      case REGULAR :
+        type = 0; 
+        break;
+      case SHIELD : //kad uvedemo supermoći
+        type = 3;
+        break;
+    }
+    
+    if (orientation == PlayerOrientation.LEFT){
+      type++;
+    }
+    else if (orientation == PlayerOrientation.RIGHT){
+      type += 2;
+    }
+    
+    PImage img;
+    if (no_player == 1)    
+      img = player1_images.get(type);
+    else
+      img = player2_images.get(type);
+
+    // Position je sredina sličice.
+    image(img , position - 15, gameHeight - 50, 30, 50 );
     // Nacrtaj koplje (ako je aktivno).
     if (spearActive)
       rect(xSpear - 1, ySpear, 2, gameHeight - ySpear);
@@ -60,6 +100,14 @@ class Player {
     position = no_player*windowWidth/(quantity+1) - 25;
   }
 
+  void resetOrientation() {
+    orientation = PlayerOrientation.BACK;
+  }
+  
+  void resetState() {
+    state = PlayerState.REGULAR;
+  }
+  
   // Ažuriraj koplje i sve što treba.
   void update() {
     if (spearActive) {
