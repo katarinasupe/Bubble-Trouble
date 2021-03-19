@@ -80,7 +80,7 @@ void setup() {
   is_game_over = false;
   level_done = false;
   balls.clear();
-  balls.add(new Ball(windowWidth/2, gameHeight/2, 4, 4));
+  balls.add(new Ball(windowWidth/2, gameHeight/2, 4));
   // Pamtimo vrijeme početka radi kasnijeg računanja bodova:
   minutes = minute();
   seconds = second();
@@ -362,26 +362,27 @@ void draw() {
     // Ponovno iscrtaj pozadinu.
     background(menuBackground);
     rect((windowWidth - gameWidth)/2, 0, gameWidth, gameHeight);
-    
-    // Ispis preostalih života, ovo će vjerojatno biti sličice kasnije.
-    fill(255);
-    textFont(gameFont);
-    int j = 0;
-    for (Player player : players) {
-      if (player.lives >= 0) text("Player " + (j+1) + ":  " + player.lives, 225*j+80, windowHeight-20 );
-      else text("Player " + (j+1) + ":  0", 225*j+80, windowHeight-20 );
-      j++;
-    }
   
     // Nacrtaj igrače i lopte.
     for (Player player: players)
-      if (player.lives != 0) player.draw();
+      if (player.lives > 0 || player.just_lost_life) player.draw();
     for (Ball ball : balls)
       ball.draw();
       
     // Trenutno će koplje "izlaziti" iz okvira igre pa treba još
     // jednom iscrtati dio pozadine.
     image(menuBackgroundSmall, 0, gameHeight);
+    
+    // Ispis preostalih života, ovo će vjerojatno biti sličice kasnije.
+    fill(255);
+    textFont(gameFont);
+    textAlign(CENTER, CENTER);
+    int j = 0;
+    for (Player player : players) {
+      if (player.lives >= 0) text("Player " + (j+1) + ":  " + player.lives, 225*j+100, windowHeight-20 );
+      else text("Player " + (j+1) + ":  0", 225*j+100, windowHeight-20 );
+      j++;
+    }
     
     // Ako je igrač izgubio život, ali još uvijek ima preostale živote:
     if(lostLife && !is_game_over) {
@@ -398,7 +399,7 @@ void draw() {
         }
         // Ponovno postavljamo kugle.
         balls.clear();
-        balls.add(new Ball(windowWidth/2, gameHeight/2, 4, 4));
+        balls.add(new Ball(windowWidth/2, gameHeight/2, 4));
         // Ponovno postavljamo bodove
         // ------------- TODO: prilagoditi između levela (jer se zbrajaju bodovi za sve levele)----------
         // ------------------- Vjv će biti ok dodati varijablu player.overall_points gdje ćemo nadodavati bodove iz levela
@@ -416,6 +417,7 @@ void draw() {
      }
      
      if(get_ready) {
+       for (Player player: players) player.just_lost_life = false;
        // Opet određeni kratki interval upozravamo igrača da se spremi za novi pokušaj.
        if (millis() - getReady_millisecs <= 500)
         write_dummy_text("GET READY");
@@ -612,7 +614,7 @@ void ballSpearCollision() {
   for (Player player : players) {
     for (int i = 0; i < balls.size(); ++i) {
       if (balls.get(i).checkSpearCollision(player.xSpear, player.ySpear)) {
-        player.points += (balls.get(i).origin-balls.get(i).sizeLevel+1)*10;
+        player.points += (6-balls.get(i).sizeLevel+1)*10;
         print(player.points, "\n");
         player.resetSpear();
         if (balls.get(i).sizeLevel > 1) {
@@ -620,8 +622,8 @@ void ballSpearCollision() {
             player.stopSpearSound(); //prestaje reprodukcija zvuka strelice
             collisionSound.play(); //reproduciramo zvuk pogotka
           }
-          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, 1, -3, balls.get(i).yCenter, balls.get(i).origin));
-          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, -1, -3, balls.get(i).yCenter, balls.get(i).origin));
+          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, 1, -3, balls.get(i).yCenter));
+          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, -1, -3, balls.get(i).yCenter));
         }
         balls.remove(i);
         if (balls.isEmpty()) levelWon();
@@ -651,9 +653,10 @@ void game_over() {
 
 // Funkcija za detekciju kolizije lopti i igrača.
 void ballPlayerCollision() {
-  if (is_game_over) return;
+  if (is_game_over || lostLife) return;
   // Također prolazimo po svim igračima i loptama i provjeravamo dolazi li do kolizije.
   for (Player player : players) {
+    if(player.lives <= 0) continue;
     for (int i = 0; i < balls.size(); ++i) {
       Ball current = balls.get(i);
       if (current.checkPlayerCollision(player.position)) {
@@ -670,6 +673,7 @@ void ballPlayerCollision() {
           delay_millisecs = millis();
           pause_game();
           lostLife = true;
+          player.just_lost_life = true;
         }
         // Varijabla kojom brojimo koliko igrača je izgubilo:
         int no_of_over = 0;

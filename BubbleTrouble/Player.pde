@@ -38,6 +38,9 @@ class Player {
   // Koplje je aktivno/trenutno ide prema gore.
   boolean spearActive = false, spearUp = false;
   
+  // Pomoćna varijabla koja detektira je li igrač nedavno izgubio život.
+  boolean just_lost_life = false;
+  
   //zvuk koji se reproducira kad igrač izbaci koplje
   SoundFile shootingSound = getShootingSound();
   boolean soundOn = getSound();
