@@ -22,7 +22,7 @@ int max_points;
 int minutes, seconds, delay_millisecs, getReady_millisecs;
 
 //slike u MAINMENU
-PImage character, bubbleTrouble, redBall, torch, soundOnImg, soundOffImg;
+PImage character, bubbleTrouble, redBall, torch, soundOnImg, soundOffImg, menuBackground, instructions, menuButton;
 PFont menuFont;
 PFont gameFont;
 
@@ -91,6 +91,9 @@ void setup() {
   torch = loadImage("torch.png");
   soundOnImg = loadImage("soundOn.png");
   soundOffImg = loadImage("soundOff.png");
+  menuBackground = loadImage("menuBackground2.png");
+  instructions = loadImage("instructions.png");
+  menuButton = loadImage("menuButton.png");
   
   //učitavanje fonta za MAINMENU
   menuFont = loadFont("GoudyStout-28.vlw");
@@ -176,20 +179,8 @@ void draw() {
   if (state == State.MAINMENU) {   
     // pushStyle() i popStyle() za očuvanje trenutnog stila i naknadno vraćanje istog
     pushStyle();
-    // Pozadina - neka siva boja
-    background(190, 190, 190);
-    
-    // Crtanje vodoravnih i vertikalnih linija na pozadini (cigle) - treba još uljepšati
-    int horizontalLines = 9;
-    int verticalLines = 8;
-    stroke(226, 226, 226);
-    for (int i = 1; i < horizontalLines; i++) {
-      line(0, i*windowHeight/horizontalLines, windowWidth, i*windowHeight/horizontalLines);
-    }
-    for (int i = 1; i < verticalLines; i++) {
-      line(i*windowWidth/verticalLines, 0, i * windowWidth/verticalLines, windowHeight);
-    }
-       
+    background(menuBackground);
+         
     // Dodavanje lika, crvene kugle i baklji
     imageMode(CENTER);
     image(character, 2*windowWidth/3, windowHeight/2);
@@ -340,8 +331,12 @@ void draw() {
     
   }
   else if (state == State.INSTRUCTIONS) {
-    // TODO: Instructions.
     introSong.stop();
+    background(instructions);
+    pushStyle();
+    imageMode(CENTER);   
+    image(menuButton, windowWidth/2, 5*windowHeight/6);
+    popStyle();    
   } 
   else if (state == State.GAME) {
     introSong.stop();
@@ -482,6 +477,12 @@ void mousePressed(){
      soundOn = true;
      introSong.play();
     }
+  }
+  
+  if((mouseX >= (windowWidth/2 - 80))  && (mouseX <= (windowWidth/2 + 80)) && (mouseY >= (5*windowHeight/6 - 45)) && (mouseY <= (5*windowHeight/6 + 45)) && state == State.INSTRUCTIONS) {
+    state = State.MAINMENU;
+    menuPick = MenuPick.ONEPLAYER;
+    introSong.play();
   }
 }
 
