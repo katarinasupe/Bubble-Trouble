@@ -23,6 +23,7 @@ int minutes, seconds, delay_millisecs, getReady_millisecs;
 
 //slike u MAINMENU
 PImage character, bubbleTrouble, redBall, torch, soundOnImg, soundOffImg, menuBackground, instructions, menuButton;
+PImage menuBackgroundSmall; // Za pokrivanje koplja, crta se u draw() kad je state == GAME.
 PFont menuFont;
 PFont gameFont;
 
@@ -91,7 +92,7 @@ void setup() {
   torch = loadImage("torch.png");
   soundOnImg = loadImage("soundOn.png");
   soundOffImg = loadImage("soundOff.png");
-  menuBackground = loadImage("menuBackground2.png");
+  menuBackground = loadImage("menuBackground2.png"); // Napomena: Koristi se i u crtanju igre kad je state == GAME.
   instructions = loadImage("instructions.png");
   menuButton = loadImage("menuButton.png");
   
@@ -134,7 +135,11 @@ void setup() {
   // ratio prema varijabli spearImgWidth zadanoj u Player.pde.
   spearImgHeight = ((float)spearImg.height / spearImg.width) * spearImgWidth;
   // Odmah smanji sliku.
-  spearImg.resize((int)spearImgWidth, (int)spearImgHeight); 
+  spearImg.resize((int)spearImgWidth, (int)spearImgHeight);
+  
+  // Učitavanje "odrezane" pozadine menija tako da pokrije koplje koje se inače
+  // iscrtava preko pozadine i izlazi iz okvira igre.
+  menuBackgroundSmall = loadImage("menuBackground2_gameHeight.png");
 }
 
 void createPlayers() {
@@ -354,8 +359,8 @@ void draw() {
     for (Player player: players)
       player.update();
     
-    // Ponovno iscrtaj pozadinu -- ovo možda može i prije ovih grananja ovisno o state.
-    background(0);
+    // Ponovno iscrtaj pozadinu.
+    background(menuBackground);
     rect((windowWidth - gameWidth)/2, 0, gameWidth, gameHeight);
     
     // Ispis preostalih života, ovo će vjerojatno biti sličice kasnije.
@@ -374,8 +379,9 @@ void draw() {
     for (Ball ball : balls)
       ball.draw();
       
-    // TODO: Trenutno će koplje "izlaziti" iz okvira igre pa treba još
-    // jednom iscrtati pozadinu kad se ona doda.
+    // Trenutno će koplje "izlaziti" iz okvira igre pa treba još
+    // jednom iscrtati dio pozadine.
+    image(menuBackgroundSmall, 0, gameHeight);
     
     // Ako je igrač izgubio život, ali još uvijek ima preostale živote:
     if(lostLife && !is_game_over) {
