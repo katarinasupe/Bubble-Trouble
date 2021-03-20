@@ -10,12 +10,19 @@ class Ball {
   float xCenter, yCenter;
   float xVelocity, yVelocity;
 
-  // Ako je split bilo što različito od gameHeight,
-  // to označava da je loptica tek nastala.
+  // Ako je split bilo što različito od -1, to označava da je loptica 
+  // tek nastala nakon razdvajanja veće loptice. Varijablu koristimo
+  // kako bi loptica mogla "poskočiti" nakon razdvajanja. Ako nije -1,
+  // onda je njena vrijednost visina na kojoj je loptica od koje je
+  // nastala pogođena.
   float split;
   
   // Atribut koji pamti udara li u određenom trenutku lopta igrača.
   boolean is_being_hit = false;
+  
+  // Atribut koji određuje koji je igrač udario lopticu prije no
+  // što je nastala. 0 ako nije nijedan (za početne loptice).
+  int hitByPlayer;
 
   Ball (float _xCenter, float _yCenter, int _sizeLevel) {
     sizeLevel = _sizeLevel;
@@ -24,10 +31,13 @@ class Ball {
     yCenter = _yCenter;
     xVelocity = 1;
     yVelocity = 3;
-    split = gameHeight;
+    split = -1;
+    hitByPlayer = 0;
   }
-
-  Ball (float _xCenter, float _yCenter, int _sizeLevel, float _xVelocity, float _yVelocity, float _split) {
+  // Ovaj konstruktor koristimo kada stvaramo loptice koje nastaju razdvajanjem.
+  Ball (float _xCenter, float _yCenter, int _sizeLevel, 
+      float _xVelocity, float _yVelocity, 
+      float _split, int _hitByPlayer) {
     sizeLevel = _sizeLevel;
     radius = sizeLevel * 10;
     xCenter = _xCenter; 
@@ -35,28 +45,32 @@ class Ball {
     xVelocity = _xVelocity; 
     yVelocity = _yVelocity;
     split = _split;
+    hitByPlayer = _hitByPlayer;
   }
   // Ažuriranje pozicije kugle.
   void update() {
     // Pomakni kuglu.
     xCenter += xVelocity; 
     yCenter += yVelocity;
-
-    float top;
-    if (sizeLevel >= 6) // Loptice levela 6 i veće su jednake visine.
-      top = (float)1/7 * gameHeight - 50;
-    else
-      top = (float)(7 - sizeLevel)/7 * gameHeight - 50;
-
-    // Loptica se nastavlja ponašati normalno.
-    if (split != gameHeight && yCenter + radius > top && yCenter + radius > split)
-      split = gameHeight;
-    // Loptica je tek nastala, može ići više gore nego inače.
-    else if (split != gameHeight)
-      top = split - (float)(7 - sizeLevel)/7 * gameHeight - 50;
-    // TODO: Računati top na neki drugi način, ovo je dosta loše. Loptica
-    // bi trebala poskočiti kada se razbije.
-
+  
+    // Varijabla top predstavlja gornji rub do kojeg loptica
+    // skače. Njena vrijednost se postavlja na različit način
+    // u ovisnosti o tome je li loptica tek nastala razdvajanjem
+    // (tada ona poskoči).
+    float top = 0;
+    
+    if (split == -1) // Loptica se ponaša normalno
+      top = gameHeight - ballJumpHeight[sizeLevel];
+    else { // Loptica je tek nastala, treba "poskočiti".
+      // Ne smije otići izvan ekrana.
+      if (split - splitBallJumpHeight[sizeLevel] > 0)
+        top = split - splitBallJumpHeight[sizeLevel];
+      // Loptica je završila s "poskokom", u nastavku se
+      // treba ponašati normalno.
+      if (yCenter >= split && yCenter >= gameHeight - ballJumpHeight[sizeLevel])
+        split = -1;
+    }
+    
     // Odbijanje od rubova.
     if (xCenter + radius > (windowWidth + gameWidth)/2) { // Desni rub.
       xVelocity = xVelocity * -1;
@@ -96,12 +110,13 @@ class Ball {
     return false;
   }
   
-  // TODO: Prepraviti funkciju kada se ubaci prava slika.
   boolean checkPlayerCollision(float playerPosition) {
-    // Provjera je li bilo koja točka unutar igračevog pravokutnika u
-    // radijusu kugle. Igrač je pravokutnik 25x50.
-    for (int i = (int)playerPosition - 12; i <= playerPosition + 12; ++i)
-      for (int j = (int)gameHeight; j >= gameHeight - 50; --j)
+    // Provjera je li bilo koja točka unutar pravokutnika veličine
+    // slike lika. Ovaj -5 je mala korekcija jer lik nije baš "pravokutnik".
+    int wHalf = (int)(playerImgWidth / 2) - 5;
+    int h = (int)playerImgHeight - 5;
+    for (int i = (int)playerPosition - wHalf; i <= playerPosition + wHalf; ++i)
+      for (int j = (int)gameHeight; j >= gameHeight - h; --j)
         if (sq(i - xCenter) + sq(j - yCenter) <= sq(radius))
           return true;
     return false;

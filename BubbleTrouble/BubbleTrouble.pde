@@ -34,6 +34,12 @@ ArrayList<PImage> player2_images;
 // Slika koplja.
 PImage spearImg;
 
+// Visine do kojih loptice različitih levela veličine skaču.
+// Uvijek je isto za loptice istih veličina (ovisi o gameHeight)
+// pa se računa samo jednom u setup().
+float[] ballJumpHeight;
+float[] splitBallJumpHeight; // Visina poskoka loptice nakon razbijanja.
+
 boolean isLeft, isRight, isSpace, isA, isD, isS, isUp, isDown, isEnter;
 final int ENTER_CODE = 10; // Moze biti problema s ovim
 
@@ -129,6 +135,7 @@ void setup() {
     player2_images.add(loadImage("player2_right_shield.png"));//5 
   }
   
+  // ------------------------------------------------------------
   // Učitavanje slike koplja.
   spearImg = loadImage("spear.png");
   // Računanje visine koplja tako da slika zadrži aspect
@@ -137,9 +144,21 @@ void setup() {
   // Odmah smanji sliku.
   spearImg.resize((int)spearImgWidth, (int)spearImgHeight);
   
+  // ------------------------------------------------------------
   // Učitavanje "odrezane" pozadine menija tako da pokrije koplje koje se inače
   // iscrtava preko pozadine i izlazi iz okvira igre.
   menuBackgroundSmall = loadImage("menuBackground2_gameHeight.png");
+  
+  // ------------------------------------------------------------
+  // Računanje visina do koje loptice skaču. Varijabla i je u ovom
+  // slučaju sizeLevel. ballJumpHeight[0] ne koristimo.
+  ballJumpHeight = new float[7];
+  for (int i = 0; i < 7; ++i)
+    ballJumpHeight[i] = (float)i / 7 * gameHeight + 50;
+  splitBallJumpHeight = new float[7];
+  for (int i = 0; i < 7; ++i)
+    // "Eksperimentalno" odabrana formula.
+    splitBallJumpHeight[i] = (float)sq(gameHeight)/(800 + i*500);
 }
 
 void createPlayers() {
@@ -181,6 +200,9 @@ void restart_the_balls() {
 }
 
 void draw() {
+  // ------------------------------------------------------------
+  // MAINMENU
+  // ------------------------------------------------------------
   if (state == State.MAINMENU) {   
     // pushStyle() i popStyle() za očuvanje trenutnog stila i naknadno vraćanje istog
     pushStyle();
@@ -335,6 +357,9 @@ void draw() {
     
     
   }
+  // ------------------------------------------------------------
+  // INSTRUCTIONS
+  // ------------------------------------------------------------
   else if (state == State.INSTRUCTIONS) {
     introSong.stop();
     background(instructions);
@@ -343,6 +368,9 @@ void draw() {
     image(menuButton, windowWidth/2, 5*windowHeight/6);
     popStyle();    
   } 
+  // ------------------------------------------------------------
+  // GAME
+  // ------------------------------------------------------------
   else if (state == State.GAME) {
     introSong.stop();
     // Provjeri kolizije.
@@ -352,6 +380,7 @@ void draw() {
     }
     
     ballPlayerCollision();
+    ballTopEdgeCollision();
     
     // Ažuriraj kugle i igrače.
     for (Ball ball : balls)
@@ -368,7 +397,7 @@ void draw() {
       if (player.lives > 0 || player.just_lost_life) player.draw();
     for (Ball ball : balls)
       ball.draw();
-      
+         
     // Trenutno će koplje "izlaziti" iz okvira igre pa treba još
     // jednom iscrtati dio pozadine.
     image(menuBackgroundSmall, 0, gameHeight);
@@ -549,8 +578,11 @@ void setMove(char k, boolean b) {
     isSpace = b;
     return;
   
+  // Ove tipke ne smiju imati nikakav učinak kad se igra sa samo jednim
+  // igračem, tj. kad je quantity == 1.
   // Sve tipke za drugog igrača: a-lijevo, d-desno, s-koplje
   case 'a':
+    if (quantity == 1) return;
     isA = b;
     if (b)
       players.get(1).orientation = PlayerOrientation.LEFT;
@@ -559,6 +591,7 @@ void setMove(char k, boolean b) {
     return;
     
   case 'A':
+    if (quantity == 1) return;
     isA = b;
     if (b)
       players.get(1).orientation = PlayerOrientation.LEFT;
@@ -567,6 +600,7 @@ void setMove(char k, boolean b) {
     return;
 
   case 'd':
+    if (quantity == 1) return;
     isD = b;
     if (b)
       players.get(1).orientation = PlayerOrientation.RIGHT;
@@ -575,6 +609,7 @@ void setMove(char k, boolean b) {
     return;
     
   case 'D':
+    if (quantity == 1) return;
     isD = b;
     if (b)
       players.get(1).orientation = PlayerOrientation.RIGHT;
@@ -583,10 +618,12 @@ void setMove(char k, boolean b) {
     return;
   
   case 's':
+    if (quantity == 1) return;
     isS = b;
     return;
     
   case 'S':
+    if (quantity == 1) return;
     isS = b;
     return;
   }
@@ -606,13 +643,20 @@ void levelWon() {
   
 }
 
-
 // Funkcija za detekciju kolizije lopti i koplja.
 void ballSpearCollision() {
   // Za svakog igrača (prva for petlja) i svaku loptu (druga for petlja)
   // gledamo dolazi li do kolizije i potom postupamo prikladno.
   for (Player player : players) {
-    for (int i = 0; i < balls.size(); ++i) {
+    for (int i = balls.size() - 1; i >= 0; --i)
+      if (balls.get(i).checkSpearCollision(player.xSpear, player.ySpear))
+        splitBall(i, player);
+    //-------------------------
+    // STARI KOD (za svaki slučaj). Sve unutar petlje je prebačeno u funkciju splitBall(), ali može se vratiti za 
+    // slučaj da nešto ne radi kako treba. Petlja (gore) je napisana tako da ide unatrag
+    // da ne bi došlo kod problema prilikom balls.remove(i) unutar splitBall().
+    //-------------------------
+    /*for (int i = 0; i < balls.size(); ++i) {
       if (balls.get(i).checkSpearCollision(player.xSpear, player.ySpear)) {
         player.points += (6-balls.get(i).sizeLevel+1)*10;
         print(player.points, "\n");
@@ -622,14 +666,15 @@ void ballSpearCollision() {
             player.stopSpearSound(); //prestaje reprodukcija zvuka strelice
             collisionSound.play(); //reproduciramo zvuk pogotka
           }
-          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, 1, -3, balls.get(i).yCenter));
-          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, -1, -3, balls.get(i).yCenter));
+                    
+          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, 1, -3, balls.get(i).yCenter, player.no_player));
+          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, -1, -3, balls.get(i).yCenter, player.no_player));
         }
         balls.remove(i);
         if (balls.isEmpty()) levelWon();
         return;
       }
-    }
+    }*/
   }
 }
 
@@ -694,4 +739,42 @@ void ballPlayerCollision() {
       else current.is_being_hit = false; // Ako kolizije više nema, postavljamo atribut na false.
     }
   }
+}
+
+// Funkcija koja provjerava je li ikoja od lopti udarila
+// u gornji rub ekrana (tada ona nestaje).
+void ballTopEdgeCollision() {
+  // Idemo unatrag zbog eventualnog brisanja lopte.
+  for (int i = balls.size() - 1; i >= 0; --i) {
+    Ball ball = balls.get(i);  // Dohvati i-tu loptu.
+    // Razdvoji je ako je udarila u gornji rub.
+    if (ball.yCenter - ball.radius <= 0)
+      splitBall(i, players.get(ball.hitByPlayer - 1));
+  }  
+}
+
+// Funkcija koja se brine o razdvajanju i-te lopte u dvije te
+// pridodaje bodove igraču player.
+void splitBall(int i, Player player) {
+  Ball ball = balls.get(i);
+  
+  player.points += (6-ball.sizeLevel+1)*10;
+  print(player.points, "\n");
+  player.resetSpear();
+  if (ball.sizeLevel > 1) {
+    if(soundOn) {
+      player.stopSpearSound(); //prestaje reprodukcija zvuka strelice
+      collisionSound.play(); //reproduciramo zvuk pogotka
+    }
+    balls.add(new Ball(ball.xCenter, ball.yCenter, 
+                      ball.sizeLevel-1, 1, -3, 
+                      ball.yCenter, player.no_player));
+                      
+    balls.add(new Ball(ball.xCenter, ball.yCenter, 
+                      ball.sizeLevel-1, -1, -3, 
+                      ball.yCenter, player.no_player));
+  }
+  balls.remove(i);
+  if (balls.isEmpty()) levelWon();
+  return;
 }
