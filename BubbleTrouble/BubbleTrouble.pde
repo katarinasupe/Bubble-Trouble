@@ -109,12 +109,13 @@ void setup() {
   gameFont = loadFont("GoudyStout-16.vlw");
   
   path = sketchPath("");
+  path = path + "\\sounds\\";
   introSong = new SoundFile(this, path + "intro.mp3");
   shootingSound = new SoundFile(this, path + "shooting.mp3");
   collisionSound = new SoundFile(this, path + "collision.mp3");
   switchSound = new SoundFile(this, path + "switch.mp3");
   punchSound = new SoundFile(this, path + "punch.mp3");
-  introSong.play();
+  introSong.loop();
   
   //slike igrača
   player1_images = new ArrayList<PImage>(); 
@@ -298,7 +299,10 @@ void draw() {
     
     // Pritisak gumba Enter
     if (isEnter) {
-      if(soundOn) switchSound.play();
+      if(soundOn){
+        introSong.stop();
+        switchSound.play();
+      } 
       if (menuPick == MenuPick.ONEPLAYER) {
         quantity = 1;
         createPlayers();
@@ -504,7 +508,7 @@ void keyReleased() {
 void mousePressed(){ 
   
   //Provjeravamo je li korisnik kliknuo na mute button
-  if ((mouseX >= (windowWidth - 80-20) && mouseX <= (windowWidth - 80 + 20)) && (mouseY >= 25 && mouseY <= 55)){
+  if ((mouseX >= (windowWidth - 80-20) && mouseX <= (windowWidth - 80 + 20)) && (mouseY >= 25 && mouseY <= 55) && state == State.MAINMENU){
     
     if(soundOn) {
      soundOn = false;
@@ -512,7 +516,7 @@ void mousePressed(){
     }
     else {
      soundOn = true;
-     introSong.play();
+     introSong.loop();
     }
   }
   
