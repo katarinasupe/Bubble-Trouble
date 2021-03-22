@@ -70,7 +70,8 @@ enum State {
     MAINMENU, 
     INSTRUCTIONS, 
     GAME,
-    PAUSE
+    PAUSE,
+    RESULTS
 }
 // Na početku igre vidimo stanje MAINMENU
 State state = State.MAINMENU; 
@@ -139,7 +140,7 @@ void setup() {
   menuFont = loadFont("GoudyStout-28.vlw");
   
   //učitavanje fonta za GAME
-  gameFont = loadFont("GoudyStout-20.vlw");
+  gameFont = loadFont("GoudyStout-23.vlw");
   
   // učitavanje slike za pauzu u GAME
   pauseImg = loadImage("pause.png");
@@ -499,17 +500,7 @@ void draw() {
     // Trenutno će koplje "izlaziti" iz okvira igre pa treba još
     // jednom iscrtati dio pozadine.
     image(menuBackgroundSmall, 0, gameHeight);
-    
-    // Ispis preostalih života, ovo će vjerojatno biti sličice kasnije.
-    /*fill(255);
-    textFont(gameFont);
-    textAlign(CENTER, CENTER);
-    int j = 0;
-    for (Player player : players) {
-      if (player.lives >= 0) text("Player " + (j+1) + ":  " + player.lives, 225*j+100, windowHeight-20 );
-      else text("Player " + (j+1) + ":  0", 225*j+100, windowHeight-20 );
-      j++;
-    }*/
+   
     
     //Ubacivanje slicica na kojima pise Player1, Player2
     image(player1_text, (windowWidth - gameWidth)/2, windowHeight - 40 - 42);
@@ -519,9 +510,6 @@ void draw() {
     fill(194,194,193);
     rect((windowWidth-gameWidth)/2 + player1_text.width + 5, windowHeight - 40 - 42 + 5, 120, 35);
     rect(windowWidth - (windowWidth-gameWidth)/2 - 175 - 120 - 8, windowHeight - 40 - 40 + 2, 122, 37);
-    if(players.size() == 2) {
-       //onda se ispisuje tekst u score drugog igraca, inace samo score prvog igraca
-    }
     stroke(0);
     strokeWeight(1);
 
@@ -567,7 +555,7 @@ void draw() {
     }
     
     //Ispis levela i baklji
-    image(levelImg, windowWidth/2 - 136/2, windowHeight - 30 - 92);
+    image(levelImg, windowWidth/2 - 136/2, windowHeight - 30 - 90 + 5);
     image(torch, windowWidth/2 - 124/2 - 50 - 33, gameHeight + (windowHeight - gameHeight)/2 - 118/2);
     image(torch, windowWidth/2 + 124/2 + 50, gameHeight + (windowHeight - gameHeight)/2 - 118/2);
     
@@ -621,35 +609,31 @@ void draw() {
        }
      }
     
-    // Ako je igra gotova, pišemo odgovarajuću poruku:
-    if(is_game_over) {
-      write_dummy_text("GAME OVER");
-      if(isEnter) {
-        reset_game();
-        isEnter = false;
+    // Ako je igra gotova ili ako je zadnji level
+    if(is_game_over || game_completed) {
+      reset_transition();
+      if(soundOn) {
+        switchSound.play();
       }
+      state = State.RESULTS;
     }
     
-    // Ako je zadnji level pobjeđen ispisuje se čestitka.
+   /* // Ako je zadnji level pobjeđen ispisuje se čestitka.
     if(game_completed){
-      write_dummy_text("You win!");
-      if(isEnter) {
-        reset_game();
-        isEnter = false;
-      }
-    }
+      reset_transition();
+      if(soundOn)
+        switchSound.play();
+      state = State.RESULTS;
+    }*/
+    
     // Ako je neki drugi level pobjeđen, prikazuje se odgovarajuća poruka i prelazi na novi level.
     else if (level_done) {
       if (millis() - levelWon_millisecs <= 2000)
-        write_dummy_text("Level passed " + players.get(0).points);
+        write_dummy_text("Level done!");
       else{  
         level_done = false;
         restart_the_balls();
       }        
-      if(isEnter) {
-        reset_game();
-        isEnter = false;
-      }  
     }  
     }
     // ------------------------------------------------------------
@@ -677,6 +661,62 @@ void draw() {
         fill(255);
         stroke(0);
         strokeWeight(1);
+    }
+    // ------------------------------------------------------------
+    // RESULTS
+    // ------------------------------------------------------------
+    else if (state == State.RESULTS) { 
+    
+      background(menuBackground);
+      imageMode(CENTER);
+      image(redBall, windowWidth/4, windowHeight/4);
+      pushMatrix();
+      rotate(radians(-15));
+      image(bubbleTrouble, windowWidth/5, windowHeight/3);
+      popMatrix();
+      
+      imageMode(CORNER);
+      float imgX = windowWidth/4 - redBall.width/2;
+      float imgY = windowHeight/4 + redBall.height/2 + 80 + 10; //(+10 zbog poruke o zavrsetku igre)
+      image(player1_text, imgX, imgY);
+      image(player2_text, imgX, imgY + 80);
+      
+      stroke(145);
+      strokeWeight(4);
+      fill(200);
+      float recX = imgX + player1_text.width + 20;
+      float recY = imgY + 2;
+      rect(recX, recY, 150, player1_text.height - 4);
+      rect(recX, recY + 80, 150, player2_text.height - 4);
+      
+      int j=0;
+      textFont(gameFont);
+      textAlign(CENTER,CENTER);
+      fill(110);
+      for(Player player: players) {
+        if(j==0) {
+          text(player.points, recX + 150/2, recY + player1_text.height/2);
+        } else {
+          text(player.points, recX + 150/2, recY + player2_text.height/2 + 80);
+        }
+        j++;
+      }
+      
+      image(menuButton, windowWidth/2 - menuButton.width/2, windowHeight - menuButton.height - 50);
+
+      
+      if(is_game_over) write_dummy_text("GAME OVER");
+      else if(game_completed) write_dummy_text("YOU WIN");
+      
+      /*if(soundOn) {
+        introSong.loop(); //Ovo iz nekog razloga ne radi
+      }*/
+      
+      fill(255);
+      stroke(0);
+      strokeWeight(1);
+      
+      draw_transition(true);
     }
 }
 
@@ -733,8 +773,17 @@ void mousePressed(){
       state = State.GAME;
     }
     else if(mouseX >= (windowWidth/2 - 450/2) && mouseX <= (windowWidth/2 + 450/2) && mouseY >= (windowHeight/2 + 10) && mouseY <= (windowHeight/2 + 90)){
+      if(soundOn)
+        switchSound.play();
       reset_game();    
     }    
+  }
+  
+  //provjera je li korisnik kliknuo na gumb meni u State.RESULT
+  if( mouseX >= (windowWidth/2 - menuButton.width/2) && mouseX <= (windowWidth/2 + menuButton.width/2) && mouseY>= (windowHeight - menuButton.height - 50) && mouseY<= (windowHeight - 50)) {
+     if(soundOn)
+       switchSound.play();
+     reset_game();
   }
 }
 
