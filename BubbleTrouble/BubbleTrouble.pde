@@ -23,11 +23,19 @@ int minutes, seconds, delay_millisecs, getReady_millisecs;
 
 //slike u MAINMENU
 PImage character, bubbleTrouble, redBall, torch, soundOnImg, soundOffImg, menuBackground, instructions, menuButton;
+PImage bottomWall, topWall; // polovice zidova koje se pomiču
 PImage menuBackgroundSmall; // Za pokrivanje koplja, crta se u draw() kad je state == GAME.
 PImage player1_text, player2_text;
 PImage level1;
 PFont menuFont;
 PFont gameFont;
+
+
+float transitionFactor = 5; // Za koliko se piksela zid pomiče svaki frame
+float bottomWallHeight = windowHeight/2 - transitionFactor;
+float topWallHeight = transitionFactor;
+float totalMoveCtr = 0; // Kontrola izlaženja van ekrana, kada pomicanje više nije potrebno
+boolean openWall = true; // true kada se zid 'otvara', false kada se 'zatvara'
 
 //slike igrača
 ArrayList<PImage> player1_images;
@@ -108,6 +116,8 @@ void setup() {
   player1_text = loadImage("player1_text.png");
   player2_text = loadImage("player2_text.png");
   level1 = loadImage("level1.png");
+  topWall = loadImage("topWall.png");
+  bottomWall = loadImage("bottomWall.png");
   
   //učitavanje fonta za MAINMENU
   menuFont = loadFont("GoudyStout-28.vlw");
@@ -211,12 +221,46 @@ void restart_the_balls() {
   }
 }
 
-void draw() {
+// Funkcija za crtanje zida koji se pomiče pri prijelazu s glavnog izbornika u igru
+void draw_transition(boolean openWall) {
+  if (topWall.height - totalMoveCtr > 0 && openWall) {
+    topWallHeight -= transitionFactor;
+    bottomWallHeight += transitionFactor;
+    image(topWall, 0, topWallHeight);
+    image(bottomWall, 0, bottomWallHeight);
+    totalMoveCtr += transitionFactor;
+  }
+  // nije bas dobro jos i ne znan di koristit tocno
+  else if (topWall.height - totalMoveCtr > 0 && !openWall) {
+    topWallHeight -= transitionFactor;
+    bottomWallHeight += transitionFactor;
+    image(topWall, 0, bottomWallHeight - windowHeight/2 - topWall.height);
+    image(bottomWall, 0, topWallHeight + windowHeight);    
+    totalMoveCtr += transitionFactor;
+  }
+}
+
+// Funkcija za resetiranje tranzicije
+void reset_transition() {
+  bottomWallHeight = windowHeight/2 - transitionFactor;
+  topWallHeight = transitionFactor;
+  totalMoveCtr = 0;  
+}
+
+// Vraćanje u glavni izbornik tako da odabir bude defaultan te se zvuk pokrene
+void reset_game() {
+  state = State.MAINMENU;
+  menuPick = MenuPick.ONEPLAYER;
+  reset_transition();
+  soundOn = true;
+  introSong.loop();
+}
+
+void draw() { 
   // ------------------------------------------------------------
   // MAINMENU
   // ------------------------------------------------------------
   if (state == State.MAINMENU) {   
-      
     // pushStyle() i popStyle() za očuvanje trenutnog stila i naknadno vraćanje istog
     pushStyle();
     background(menuBackground);
@@ -309,8 +353,11 @@ void draw() {
     }
     popStyle();
     
+    
+    draw_transition(true);
     // Pritisak gumba Enter
     if (isEnter) {
+      reset_transition();
       if(soundOn){
         introSong.stop();
         switchSound.play();
@@ -327,7 +374,9 @@ void draw() {
         state = State.GAME;
         setup();
       }
-      else if (menuPick == MenuPick.CONTROLS) state = State.INSTRUCTIONS;
+      else if (menuPick == MenuPick.CONTROLS) {
+        state = State.INSTRUCTIONS;
+      }
       else exit();
     }
     
@@ -383,12 +432,14 @@ void draw() {
     imageMode(CENTER);   
     image(menuButton, windowWidth/2, 5*windowHeight/6);
     popStyle();    
+    draw_transition(true);
   } 
   // ------------------------------------------------------------
   // GAME
   // ------------------------------------------------------------
   else if (state == State.GAME) {
     introSong.stop();
+    
     // Provjeri kolizije.
     for (Player player : players) {
       if (player.spearActive)
@@ -462,7 +513,10 @@ void draw() {
          }
          j++;
     }
-    
+   
+    draw_transition(true); // Crtanje zidova koji se pomiču
+     
+    // dodati neki delay igre?
     // Ako je igrač izgubio život, ali još uvijek ima preostale živote:
     if(lostLife && !is_game_over) {
       // Pišemo prikladni tekst za kratak period vremena:
@@ -511,11 +565,7 @@ void draw() {
     if(is_game_over) {
       write_dummy_text("GAME OVER");
       if(isEnter) {
-        state = State.MAINMENU;
-        // dodala san reset odabira u izborniku i paljenje zvuka 
-        menuPick = MenuPick.ONEPLAYER;
-        soundOn = true;
-        introSong.loop();
+        reset_game();
         isEnter = false;
       }
     }
@@ -524,7 +574,7 @@ void draw() {
     if (level_done) {
       write_dummy_text("Level passed " + players.get(0).points);
       if(isEnter) {
-        state = State.MAINMENU;
+        reset_game();
         isEnter = false;
       }
     }
@@ -571,10 +621,7 @@ void mousePressed(){
   }
   
   if((mouseX >= (windowWidth/2 - 80))  && (mouseX <= (windowWidth/2 + 80)) && (mouseY >= (5*windowHeight/6 - 45)) && (mouseY <= (5*windowHeight/6 + 45)) && state == State.INSTRUCTIONS) {
-    state = State.MAINMENU;
-    menuPick = MenuPick.ONEPLAYER;
-    soundOn = true;
-    introSong.loop();
+    reset_game();
   }
 }
 
