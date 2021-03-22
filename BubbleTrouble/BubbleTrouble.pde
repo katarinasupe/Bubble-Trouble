@@ -24,6 +24,8 @@ int minutes, seconds, delay_millisecs, getReady_millisecs;
 //slike u MAINMENU
 PImage character, bubbleTrouble, redBall, torch, soundOnImg, soundOffImg, menuBackground, instructions, menuButton;
 PImage menuBackgroundSmall; // Za pokrivanje koplja, crta se u draw() kad je state == GAME.
+PImage player1_text, player2_text;
+PImage level1;
 PFont menuFont;
 PFont gameFont;
 
@@ -82,6 +84,7 @@ boolean getSound() {
 boolean lostLife = false;
 
 void setup() {
+  
   size(1280, 720);
   is_game_over = false;
   level_done = false;
@@ -101,6 +104,9 @@ void setup() {
   menuBackground = loadImage("menuBackground2.png"); // Napomena: Koristi se i u crtanju igre kad je state == GAME.
   instructions = loadImage("instructions.png");
   menuButton = loadImage("menuButton.png");
+  player1_text = loadImage("player1_text.png");
+  player2_text = loadImage("player2_text.png");
+  level1 = loadImage("level1.png");
   
   //učitavanje fonta za MAINMENU
   menuFont = loadFont("GoudyStout-28.vlw");
@@ -115,7 +121,10 @@ void setup() {
   collisionSound = new SoundFile(this, path + "collision.mp3");
   switchSound = new SoundFile(this, path + "switch.mp3");
   punchSound = new SoundFile(this, path + "punch.mp3");
-  introSong.loop();
+  
+  //ako je korisnik pritisnuo enter, znaci da je odabrao jednu od opcija igre i ponovno se poziva setup, a ne zelimo da se intro ponovno reproducira
+  if(soundOn && !isEnter)
+    introSong.loop();
   
   //slike igrača
   player1_images = new ArrayList<PImage>(); 
@@ -205,6 +214,7 @@ void draw() {
   // MAINMENU
   // ------------------------------------------------------------
   if (state == State.MAINMENU) {   
+      
     // pushStyle() i popStyle() za očuvanje trenutnog stila i naknadno vraćanje istog
     pushStyle();
     background(menuBackground);
@@ -407,7 +417,7 @@ void draw() {
     image(menuBackgroundSmall, 0, gameHeight);
     
     // Ispis preostalih života, ovo će vjerojatno biti sličice kasnije.
-    fill(255);
+    /*fill(255);
     textFont(gameFont);
     textAlign(CENTER, CENTER);
     int j = 0;
@@ -415,6 +425,40 @@ void draw() {
       if (player.lives >= 0) text("Player " + (j+1) + ":  " + player.lives, 225*j+100, windowHeight-20 );
       else text("Player " + (j+1) + ":  0", 225*j+100, windowHeight-20 );
       j++;
+    }*/
+    
+    //Ubacivanje slicica na kojima pise Player1, Player2
+    image(player1_text, (windowWidth - gameWidth)/2, windowHeight - 40 - 42);
+    if(players.size() == 2) {
+      image(player2_text, windowWidth - (windowWidth-gameWidth)/2 - 175, windowHeight - 40 - 40);
+    }
+    
+    //Ispis levela i baklji
+    image(level1, windowWidth/2 - 124/2, windowHeight - 30 - 91);
+    image(torch, windowWidth/2 - 124/2 - 50 - 33, gameHeight + (windowHeight - gameHeight)/2 - 118/2);
+    image(torch, windowWidth/2 + 124/2 + 50, gameHeight + (windowHeight - gameHeight)/2 - 118/2);
+    
+    //Ispis života
+    int j = 0;
+    for (Player player : players) {
+         PImage lives;
+         String img_name = "lives";
+         if(player.lives == -1) {
+            img_name += "0.png"; //zbog trika s game over
+         } else {
+            img_name += player.lives + ".png";
+         }
+         try {
+           lives = loadImage(img_name);
+           if(j==0) {
+             image(lives, (windowWidth - gameWidth)/2, windowHeight - 82 - 30 - 5);
+           } else {
+             image(lives, windowWidth - (windowWidth-gameWidth)/2 - 306, windowHeight - 82 - 30 - 5) ;
+           }
+         } catch (Exception e) {
+           print("Slika ne postoji ili je greska u broju zivota.");
+         }
+         j++;
     }
     
     // Ako je igrač izgubio život, ali još uvijek ima preostale živote:
@@ -512,7 +556,7 @@ void mousePressed(){
     
     if(soundOn) {
      soundOn = false;
-     introSong.pause(); 
+     introSong.stop(); 
     }
     else {
      soundOn = true;
