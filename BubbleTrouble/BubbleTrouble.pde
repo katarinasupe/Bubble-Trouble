@@ -512,6 +512,10 @@ void draw() {
       write_dummy_text("GAME OVER");
       if(isEnter) {
         state = State.MAINMENU;
+        // dodala san reset odabira u izborniku i paljenje zvuka 
+        menuPick = MenuPick.ONEPLAYER;
+        soundOn = true;
+        introSong.loop();
         isEnter = false;
       }
     }
@@ -569,7 +573,8 @@ void mousePressed(){
   if((mouseX >= (windowWidth/2 - 80))  && (mouseX <= (windowWidth/2 + 80)) && (mouseY >= (5*windowHeight/6 - 45)) && (mouseY <= (5*windowHeight/6 + 45)) && state == State.INSTRUCTIONS) {
     state = State.MAINMENU;
     menuPick = MenuPick.ONEPLAYER;
-    introSong.play();
+    soundOn = true;
+    introSong.loop();
   }
 }
 
