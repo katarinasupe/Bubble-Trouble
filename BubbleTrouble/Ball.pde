@@ -34,6 +34,17 @@ class Ball {
     split = -1;
     hitByPlayer = 0;
   }
+  // Ovaj konstruktor koristimo kada stvaramo levele.
+  Ball (float _xCenter, float _yCenter, int _sizeLevel, float _xVelocity, float _yVelocity) {
+    sizeLevel = _sizeLevel;
+    radius = sizeLevel * 10;
+    xCenter = _xCenter; 
+    yCenter = _yCenter;
+    xVelocity = _xVelocity;
+    yVelocity = _yVelocity;
+    split = -1;
+    hitByPlayer = 0;
+  }
   // Ovaj konstruktor koristimo kada stvaramo loptice koje nastaju razdvajanjem.
   Ball (float _xCenter, float _yCenter, int _sizeLevel, 
       float _xVelocity, float _yVelocity, 
