@@ -252,8 +252,8 @@ void reset_game() {
   state = State.MAINMENU;
   menuPick = MenuPick.ONEPLAYER;
   reset_transition();
-  soundOn = true;
-  introSong.loop();
+  if(soundOn) 
+    introSong.loop();
 }
 
 void draw() { 
