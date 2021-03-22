@@ -70,6 +70,7 @@ SoundFile shootingSound;
 SoundFile collisionSound;
 SoundFile switchSound;
 SoundFile punchSound;
+SoundFile levelDoneSound;
 String path;
 
 SoundFile getShootingSound(){
@@ -121,6 +122,7 @@ void setup() {
   collisionSound = new SoundFile(this, path + "collision.mp3");
   switchSound = new SoundFile(this, path + "switch.mp3");
   punchSound = new SoundFile(this, path + "punch.mp3");
+  levelDoneSound = new SoundFile(this, path + "end_of_level.mp3");
   
   //ako je korisnik pritisnuo enter, znaci da je odabrao jednu od opcija igre i ponovno se poziva setup, a ne zelimo da se intro ponovno reproducira
   if(soundOn && !isEnter)
@@ -688,6 +690,8 @@ void levelWon() {
   for (Player player : players) {
     player.points += (60-seconds_passed)*5;
   }
+  if(soundOn)
+    levelDoneSound.play();
   
 }
 
