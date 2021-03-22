@@ -26,6 +26,7 @@ PImage character, bubbleTrouble, redBall, torch, soundOnImg, soundOffImg, menuBa
 PImage bottomWall, topWall; // polovice zidova koje se pomiču
 PImage menuBackgroundSmall; // Za pokrivanje koplja, crta se u draw() kad je state == GAME.
 PImage player1_text, player2_text;
+PImage fire;
 PImage level1;
 PFont menuFont;
 PFont gameFont;
@@ -118,6 +119,7 @@ void setup() {
   level1 = loadImage("level1.png");
   topWall = loadImage("topWall.png");
   bottomWall = loadImage("bottomWall.png");
+  fire = loadImage("fire.png");
   
   //učitavanje fonta za MAINMENU
   menuFont = loadFont("GoudyStout-28.vlw");
@@ -269,8 +271,15 @@ void draw() {
     imageMode(CENTER);
     image(character, 2*windowWidth/3, windowHeight/2);
     image(redBall, windowWidth/4, windowHeight/4);
-    image(torch, windowWidth/11 , windowHeight/2);
-    image(torch, windowWidth/2.46, windowHeight/2);
+
+    if(frameCount % 8 == 0) {
+      image(fire, windowWidth/11 , windowHeight/2);
+      image(fire, windowWidth/2.46, windowHeight/2);
+    }
+    else {
+      image(torch, windowWidth/11 , windowHeight/2);
+      image(torch, windowWidth/2.46, windowHeight/2);
+    }
     
     //Dodavanje gumba za gašenje zvukova
     if(soundOn){
