@@ -125,7 +125,7 @@ void setup() {
   menuFont = loadFont("GoudyStout-28.vlw");
   
   //učitavanje fonta za GAME
-  gameFont = loadFont("GoudyStout-16.vlw");
+  gameFont = loadFont("GoudyStout-20.vlw");
   
   path = sketchPath("");
   path = path + "\\sounds\\";
@@ -491,17 +491,24 @@ void draw() {
     
     //Ubacivanje slicica na kojima pise Player1, Player2
     image(player1_text, (windowWidth - gameWidth)/2, windowHeight - 40 - 42);
+    image(player2_text, windowWidth - (windowWidth-gameWidth)/2 - 175, windowHeight - 40 - 40);
+    stroke(150);
+    strokeWeight(4);
+    fill(194,194,193);
+    rect((windowWidth-gameWidth)/2 + player1_text.width + 5, windowHeight - 40 - 42 + 5, 120, 35);
+    rect(windowWidth - (windowWidth-gameWidth)/2 - 175 - 120 - 8, windowHeight - 40 - 40 + 2, 122, 37);
     if(players.size() == 2) {
-      image(player2_text, windowWidth - (windowWidth-gameWidth)/2 - 175, windowHeight - 40 - 40);
+       //onda se ispisuje tekst u score drugog igraca, inace samo score prvog igraca
     }
-    
-    //Ispis levela i baklji
-    image(level1, windowWidth/2 - 124/2, windowHeight - 30 - 91);
-    image(torch, windowWidth/2 - 124/2 - 50 - 33, gameHeight + (windowHeight - gameHeight)/2 - 118/2);
-    image(torch, windowWidth/2 + 124/2 + 50, gameHeight + (windowHeight - gameHeight)/2 - 118/2);
-    
+    stroke(0);
+    strokeWeight(1);
+
     //Ispis života
     int j = 0;
+    textFont(gameFont);
+    textAlign(CENTER, CENTER);
+    fill(120);
+    //ako igraju oba igraca
     for (Player player : players) {
          PImage lives;
          String img_name = "lives";
@@ -514,14 +521,36 @@ void draw() {
            lives = loadImage(img_name);
            if(j==0) {
              image(lives, (windowWidth - gameWidth)/2, windowHeight - 82 - 30 - 5);
+             text(player.points, (windowWidth-gameWidth)/2 + player1_text.width + 80, windowHeight - 58);
            } else {
-             image(lives, windowWidth - (windowWidth-gameWidth)/2 - 306, windowHeight - 82 - 30 - 5) ;
+             image(lives, windowWidth - (windowWidth-gameWidth)/2 - 306, windowHeight - 82 - 30 - 5);
+             text(player.points, windowWidth - (windowWidth-gameWidth)/2 - 175 - 50, windowHeight - 58);
            }
          } catch (Exception e) {
            print("Slika ne postoji ili je greska u broju zivota.");
          }
          j++;
     }
+    
+    fill(255);
+    
+    //ako igra samo jedan, onda drugom ispisemo kao da ima 0 zivota
+    if(players.size() == 1) {
+      try {
+        PImage lives = loadImage("lives0.png");
+        image(lives, windowWidth - (windowWidth-gameWidth)/2 - 306, windowHeight - 82 - 30 - 5) ;
+      } catch (Exception e) {
+        print("Slika ne postoji");
+      }
+    }
+    
+    //Ispis levela i baklji
+    image(level1, windowWidth/2 - 124/2, windowHeight - 30 - 91);
+    image(torch, windowWidth/2 - 124/2 - 50 - 33, gameHeight + (windowHeight - gameHeight)/2 - 118/2);
+    image(torch, windowWidth/2 + 124/2 + 50, gameHeight + (windowHeight - gameHeight)/2 - 118/2);
+    
+    
+    
    
     draw_transition(true); // Crtanje zidova koji se pomiču
      
