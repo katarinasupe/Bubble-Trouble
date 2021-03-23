@@ -27,7 +27,8 @@ int max_points;
 int minutes, seconds, millis, delay_millisecs, getReady_millisecs, levelWon_millisecs, temp_millisecs, paused_millisecs;
 
 //slike u MAINMENU
-PImage character, bubbleTrouble, redBall, torch, soundOnImg, soundOffImg, menuBackground, instructions, menuButton;
+PImage bubbleTrouble, redBall, torch, soundOnImg, soundOffImg, menuBackground, instructions, menuButton;
+PImage onePlayerCharacter, twoPlayersCharacter, controlsCharacter;
 PImage bottomWall, topWall; // polovice zidova koje se pomiču
 PImage menuBackgroundSmall; // Za pokrivanje koplja, crta se u draw() kad je state == GAME.
 PImage player1_text, player2_text;
@@ -120,7 +121,9 @@ void setup() {
   pause_game();
   
   //učitavanje slika za MAINMENU
-  character = loadImage("character.png");
+  onePlayerCharacter = loadImage("onePlayerCharacter.png");
+  twoPlayersCharacter = loadImage("twoPlayersCharacter.png");
+  controlsCharacter = loadImage("controlsCharacter.png"); 
   bubbleTrouble = loadImage("bubbleTrouble.png");
   redBall = loadImage("redBall.png");
   torch = loadImage("torch.png");
@@ -302,7 +305,7 @@ void draw() {
          
     // Dodavanje lika, crvene kugle i baklji
     imageMode(CENTER);
-    image(character, 2*windowWidth/3, windowHeight/2);
+    //image(character, 2*windowWidth/3, windowHeight/2);
     image(redBall, windowWidth/4, windowHeight/4);
 
     if(frameCount % 8 == 0) {
@@ -357,6 +360,7 @@ void draw() {
       // Prvo polje - 1 PLAYER
       if (i < fieldHeight) {
         if (menuPick == MenuPick.ONEPLAYER) {
+          image(onePlayerCharacter, 2*windowWidth/3, windowHeight/2);
           fill(221, 117, 87);
           rect(rectX, rectY - totalHeight/2 + i, rectX - 20, fieldHeight);
         }
@@ -366,6 +370,7 @@ void draw() {
       // Drugo polje - 2 PLAYERS
       else if (i < fieldHeight*2) {
         if (menuPick == MenuPick.TWOPLAYERS) {
+          image(twoPlayersCharacter, 2*windowWidth/3, windowHeight/2);
           fill(221, 117, 87);
           rect(rectX, rectY - totalHeight/2 + i, rectX - 20, fieldHeight);
         }
@@ -375,6 +380,7 @@ void draw() {
       // Treće polje - CONTROLS
       else if (i < fieldHeight*3) {
         if (menuPick == MenuPick.CONTROLS) {
+          image(controlsCharacter, 2*windowWidth/3, windowHeight/2);
           fill(221, 117, 87);
           rect(rectX, rectY - totalHeight/2 + i, rectX - 20, fieldHeight);
         }
@@ -384,6 +390,8 @@ void draw() {
       // Četvrto polje - QUIT
       else {
         if (menuPick == MenuPick.QUIT) {
+          // slika kao za 1 player
+          image(onePlayerCharacter, 2*windowWidth/3, windowHeight/2);
           fill(221, 117, 87);
           rect(rectX, rectY - totalHeight/2 + i, rectX - 20, fieldHeight);
         }
