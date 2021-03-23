@@ -61,8 +61,8 @@ class Ball {
   // Ažuriranje pozicije kugle.
   void update() {
     // Pomakni kuglu.
-    xCenter += xVelocity; 
-    yCenter += yVelocity;
+    xCenter += 2*xVelocity; 
+    yCenter += 2*yVelocity;
   
     // Varijabla top predstavlja gornji rub do kojeg loptica
     // skače. Njena vrijednost se postavlja na različit način

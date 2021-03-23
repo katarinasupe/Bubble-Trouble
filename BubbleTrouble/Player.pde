@@ -30,8 +30,10 @@ class Player {
   int lives = 4;
   // Kod igrača.
   int no_player;
-  // Broj ostvarenih bodova.
-  int points = 0;
+  // Broj ostvarenih bodova u jednom levelu.
+  int level_points = 0;
+  // Broj ostvarenih bodova u igri.
+  int overall_points = 0;
 
   // Pozicija glave koplja.
   float xSpear, ySpear;
@@ -125,7 +127,7 @@ class Player {
 
   void resetPosition() {
     // Pozicija ovisi o kodu igrača i o ukupnom broju igrača:
-    position = no_player*windowWidth/(quantity+1) - 25;
+    position = no_player*windowWidth/(quantity+1);
   }
 
   void resetOrientation() {
