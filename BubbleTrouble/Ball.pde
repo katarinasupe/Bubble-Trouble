@@ -1,5 +1,22 @@
-// Klasa koja predstavlja loptice. //<>//
-class Ball {
+// Globalne varijable i enumeracije vezane uz loptice. //<>//
+enum BallColor {
+  RED,
+  BLUE,
+  GREEN,
+  ORANGE,
+  PURPLE,
+  YELLOW
+}
+HashMap<BallColor, PImage> ballImgs;
+
+// Visine do kojih loptice različitih levela veličine skaču.
+// Uvijek je isto za loptice istih veličina (ovisi o gameHeight)
+// pa se računa samo jednom u setup().
+float[] ballJumpHeight;
+float[] splitBallJumpHeight; // Visina poskoka loptice nakon razbijanja.
+
+// Klasa koja predstavlja loptice.
+final class Ball {
   // Razina veličine loptice, 1 je najmanja loptica, 2 malo veća...
   // Kada se razbije loptica razine 2, nastaju dvije loptice razine 1.
   // Radijus ovisi o veličini loptice.
@@ -9,6 +26,9 @@ class Ball {
   // Središte loptice.
   float xCenter, yCenter;
   float xVelocity, yVelocity;
+  
+  // Boja loptice.
+  BallColor ballColor;
 
   // Ako je split bilo što različito od -1, to označava da je loptica 
   // tek nastala nakon razdvajanja veće loptice. Varijablu koristimo
@@ -24,7 +44,7 @@ class Ball {
   // što je nastala. 0 ako nije nijedan (za početne loptice).
   int hitByPlayer;
 
-  Ball (float _xCenter, float _yCenter, int _sizeLevel) {
+  Ball (float _xCenter, float _yCenter, int _sizeLevel, BallColor _ballColor) {
     sizeLevel = _sizeLevel;
     radius = sizeLevel * 10;
     xCenter = _xCenter; 
@@ -33,9 +53,10 @@ class Ball {
     yVelocity = 3;
     split = -1;
     hitByPlayer = 0;
+    ballColor = _ballColor;
   }
   // Ovaj konstruktor koristimo kada stvaramo levele.
-  Ball (float _xCenter, float _yCenter, int _sizeLevel, float _xVelocity, float _yVelocity) {
+  Ball (float _xCenter, float _yCenter, int _sizeLevel, float _xVelocity, float _yVelocity, BallColor _ballColor) {
     sizeLevel = _sizeLevel;
     radius = sizeLevel * 10;
     xCenter = _xCenter; 
@@ -44,11 +65,12 @@ class Ball {
     yVelocity = _yVelocity;
     split = -1;
     hitByPlayer = 0;
+    ballColor = _ballColor;
   }
   // Ovaj konstruktor koristimo kada stvaramo loptice koje nastaju razdvajanjem.
   Ball (float _xCenter, float _yCenter, int _sizeLevel, 
       float _xVelocity, float _yVelocity, 
-      float _split, int _hitByPlayer) {
+      float _split, int _hitByPlayer, BallColor _ballColor) {
     sizeLevel = _sizeLevel;
     radius = sizeLevel * 10;
     xCenter = _xCenter; 
@@ -57,6 +79,7 @@ class Ball {
     yVelocity = _yVelocity;
     split = _split;
     hitByPlayer = _hitByPlayer;
+    ballColor = _ballColor;
   }
   // Ažuriranje pozicije kugle.
   void update() {
@@ -105,10 +128,8 @@ class Ball {
   }
 
   void draw() {
-    fill(255, 0, 0);
     update();
-    circle(xCenter, yCenter, sizeLevel * 10);
-    fill(255);
+    image(ballImgs.get(ballColor), xCenter - radius, yCenter - radius, 2*radius, 2*radius);
   }
 
   boolean checkSpearCollision(float xSpear, float ySpear) {

@@ -55,12 +55,8 @@ PImage spearImg;
 PImage levelImg;
 // Slika za 'pauza' gumb.
 PImage pauseImg;
-
-// Visine do kojih loptice različitih levela veličine skaču.
-// Uvijek je isto za loptice istih veličina (ovisi o gameHeight)
-// pa se računa samo jednom u setup().
-float[] ballJumpHeight;
-float[] splitBallJumpHeight; // Visina poskoka loptice nakon razbijanja.
+// Slika bodlji na vrhu ekrana.
+PImage thornsImg;
 
 boolean isLeft, isRight, isSpace, isA, isD, isS, isUp, isDown, isEnter;
 final int ENTER_CODE = 10; // Moze biti problema s ovim
@@ -181,6 +177,10 @@ void setup() {
     player2_images.add(loadImage("player2_right_shield.png"));//5 
   }
   
+  // Učitavanje slike bodlji (trebala bi već biti širine 1024, kao i gameHeight).
+  // Treba resize ako se gameHeight promijeni.
+  thornsImg = loadImage("thorns.png");
+  
   // ------------------------------------------------------------
   // Učitavanje slike koplja.
   spearImg = loadImage("spear.png");
@@ -194,6 +194,16 @@ void setup() {
   // Učitavanje "odrezane" pozadine menija tako da pokrije koplje koje se inače
   // iscrtava preko pozadine i izlazi iz okvira igre.
   menuBackgroundSmall = loadImage("menuBackground2_gameHeight.png");
+  
+  // ------------------------------------------------------------
+  // Učitavanje slika loptica.
+  ballImgs = new HashMap<BallColor, PImage>();
+  ballImgs.put(BallColor.RED,    loadImage("redBall.png"));
+  ballImgs.put(BallColor.BLUE,   loadImage("ballBlue.png"));
+  ballImgs.put(BallColor.GREEN,  loadImage("ballGreen.png"));
+  ballImgs.put(BallColor.ORANGE, loadImage("ballOrange.png"));
+  ballImgs.put(BallColor.PURPLE, loadImage("ballPurple.png"));
+  ballImgs.put(BallColor.YELLOW, loadImage("ballYellow.png"));
   
   // ------------------------------------------------------------
   // Računanje visina do koje loptice skaču. Varijabla i je u ovom
@@ -491,6 +501,9 @@ void draw() {
     //image(levelBackground, (windowWidth - gameWidth)/2, 0, gameWidth, gameHeight);
     fill(level.r, level.g, level.b);
     rect((windowWidth - gameWidth)/2, 0, gameWidth, gameHeight);
+    
+    // Crtanje bodlji.
+    image(thornsImg, (windowWidth - gameWidth)/2+1, 0);
     
     // Crtanje gumba za pauzu.
     image(pauseImg, windowWidth-100, 25);
@@ -1101,8 +1114,8 @@ void ballTopEdgeCollision() {
   // Idemo unatrag zbog eventualnog brisanja lopte.
   for (int i = balls.size() - 1; i >= 0; --i) {
     Ball ball = balls.get(i);  // Dohvati i-tu loptu.
-    // Razdvoji je ako je udarila u gornji rub.
-    if (ball.yCenter - ball.radius <= 0)
+    // Razdvoji je ako je udarila u bodlje, koje su visine 30px.
+    if (ball.yCenter - ball.radius <= 30)
       splitBall(i, players.get(ball.hitByPlayer - 1), true);
   }  
 }
@@ -1123,11 +1136,13 @@ void splitBall(int i, Player player, boolean topEdge) {
     }
     balls.add(new Ball(ball.xCenter, ball.yCenter, 
                       ball.sizeLevel-1, 1, -3, 
-                      ball.yCenter, player.no_player));
+                      ball.yCenter, player.no_player,
+                      ball.ballColor));
                       
     balls.add(new Ball(ball.xCenter, ball.yCenter, 
                       ball.sizeLevel-1, -1, -3, 
-                      ball.yCenter, player.no_player));
+                      ball.yCenter, player.no_player,
+                      ball.ballColor));
   }
   balls.remove(i);
   if (balls.isEmpty()){

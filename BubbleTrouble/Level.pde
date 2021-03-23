@@ -20,7 +20,7 @@ class Level{
         
         time = 45000;
         
-        balls.add(new Ball((windowWidth-gameWidth)/2 + 100, gameHeight/2, 2, ballXVelocity, ballYVelocity));    
+        balls.add(new Ball((windowWidth-gameWidth)/2 + 100, gameHeight/2, 2, ballXVelocity, ballYVelocity, BallColor.YELLOW));    
         return;
       
       case 2:
@@ -33,7 +33,7 @@ class Level{
         
         time = 60000;
         
-        balls.add(new Ball(windowWidth/2, gameHeight/2 - 50, 3));
+        balls.add(new Ball(windowWidth/2, gameHeight/2 - 50, 3, BallColor.GREEN));
         return;
       
       case 3:
@@ -46,15 +46,15 @@ class Level{
         
         time = 90000;
         
-        balls.add(new Ball((windowWidth-gameWidth)/2 + 10, gameHeight - 10, 1, ballXVelocity, ballYVelocity));   
-        balls.add(new Ball((windowWidth-gameWidth)/2 + 100, gameHeight - 110, 1, ballXVelocity, ballYVelocity));   
-        balls.add(new Ball((windowWidth-gameWidth)/2 + 190, gameHeight - 10, 1, ballXVelocity, ballYVelocity));  
-        balls.add(new Ball((windowWidth-gameWidth)/2 + 280, gameHeight - 110, 1, ballXVelocity, ballYVelocity));  
+        balls.add(new Ball((windowWidth-gameWidth)/2 + 10, gameHeight - 10, 1, ballXVelocity, ballYVelocity, BallColor.BLUE));   
+        balls.add(new Ball((windowWidth-gameWidth)/2 + 100, gameHeight - 110, 1, ballXVelocity, ballYVelocity, BallColor.PURPLE));   
+        balls.add(new Ball((windowWidth-gameWidth)/2 + 190, gameHeight - 10, 1, ballXVelocity, ballYVelocity, BallColor.BLUE));  
+        balls.add(new Ball((windowWidth-gameWidth)/2 + 280, gameHeight - 110, 1, ballXVelocity, ballYVelocity, BallColor.PURPLE));  
         
-        balls.add(new Ball((windowWidth-gameWidth)/2 + gameWidth - 10, gameHeight - 110, 1, ballXVelocity, ballYVelocity));   
-        balls.add(new Ball((windowWidth-gameWidth)/2 + gameWidth - 100, gameHeight - 10, 1, ballXVelocity, ballYVelocity));   
-        balls.add(new Ball((windowWidth-gameWidth)/2 + gameWidth - 190, gameHeight - 110, 1, ballXVelocity, ballYVelocity));  
-        balls.add(new Ball((windowWidth-gameWidth)/2 + gameWidth - 280, gameHeight - 10, 1, ballXVelocity, ballYVelocity));
+        balls.add(new Ball((windowWidth-gameWidth)/2 + gameWidth - 10, gameHeight - 110, 1, ballXVelocity, ballYVelocity, BallColor.BLUE));   
+        balls.add(new Ball((windowWidth-gameWidth)/2 + gameWidth - 100, gameHeight - 10, 1, ballXVelocity, ballYVelocity, BallColor.PURPLE));   
+        balls.add(new Ball((windowWidth-gameWidth)/2 + gameWidth - 190, gameHeight - 110, 1, ballXVelocity, ballYVelocity, BallColor.BLUE));  
+        balls.add(new Ball((windowWidth-gameWidth)/2 + gameWidth - 280, gameHeight - 10, 1, ballXVelocity, ballYVelocity, BallColor.PURPLE));
         return;
       
       case 4: 
@@ -67,8 +67,8 @@ class Level{
         
         time = 120000;
         
-        balls.add(new Ball((windowWidth-gameWidth)/2 + 60, gameHeight/2, 5, ballXVelocity, ballYVelocity)); 
-        balls.add(new Ball((windowWidth-gameWidth)/2 + gameWidth - 60, 2*gameHeight/3, 4, ballXVelocity, ballYVelocity)); 
+        balls.add(new Ball((windowWidth-gameWidth)/2 + 60, gameHeight/2, 5, ballXVelocity, ballYVelocity, BallColor.ORANGE)); 
+        balls.add(new Ball((windowWidth-gameWidth)/2 + gameWidth - 60, 2*gameHeight/3, 4, ballXVelocity, ballYVelocity, BallColor.YELLOW)); 
         return;
       
       case 5:   
@@ -81,7 +81,7 @@ class Level{
         
         time = 150000;
         
-        balls.add(new Ball((windowWidth-gameWidth)/2 + 80, gameHeight/2 - 60, 6, ballXVelocity, ballYVelocity)); 
+        balls.add(new Ball((windowWidth-gameWidth)/2 + 80, gameHeight/2 - 60, 6, ballXVelocity, ballYVelocity, BallColor.PURPLE)); 
         return;     
     }    
   }

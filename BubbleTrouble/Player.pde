@@ -70,14 +70,14 @@ class Player {
           >= ((windowWidth + gameWidth)/2);
           
     if (no_player == 1) {
-      if (isLeft && !leftEdge) position = position - 2;
-      if (isRight && !rightEdge) position = position + 2;
+      if (isLeft && !leftEdge) position = position - 3;
+      if (isRight && !rightEdge) position = position + 3;
       if (isSpace && !spearActive)
         activateSpear();
     }
     if (no_player == 2) {
-      if (isA && !leftEdge) position = position - 2;
-      if (isD && !rightEdge) position = position + 2;
+      if (isA && !leftEdge) position = position - 3;
+      if (isD && !rightEdge) position = position + 3;
       if (isS && !spearActive)
         activateSpear();
     }
