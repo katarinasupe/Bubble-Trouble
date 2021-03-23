@@ -290,6 +290,14 @@ void reset_transition() {
   totalMoveCtr = 0;  
 }
 
+// Funkcija za pokretanje nove igre ovisno o odabranom broju igrača.
+void play_game(int _quantity){  
+    quantity = _quantity;
+    createPlayers();
+    state = State.GAME;
+    setup();
+}
+
 // Vraćanje u glavni izbornik tako da odabir bude defaultan te se zvuk pokrene
 void reset_game() {
   state = State.MAINMENU;
@@ -297,6 +305,55 @@ void reset_game() {
   reset_transition();
   if(soundOn) 
     introSong.loop();
+}
+
+// Pomoćna funkcija koja provjerava nalazi li se miš na '1 PLAYER' MENU izboru.
+boolean overOnePlayer(int x, int y){
+  if(x >= (windowWidth/4 - 150) && x <= (windowWidth/4 - 150 + windowWidth/4 - 20) && 
+         y >= (2*windowHeight/3 + 20 - (windowHeight/2 - 50)/2) && y <= (2*windowHeight/3 + 20 - (windowHeight/2 - 50)/2 + (windowHeight/2 - 50)/4))
+    return true;
+  return false;         
+}
+
+// Pomoćna funkcija koja provjerava nalazi li se miš na '2 PLAYERS' MENU izboru.
+boolean overTwoPlayers(int x, int y){
+  if(x >= (windowWidth/4 - 150) && x <= (windowWidth/4 - 150 + windowWidth/4 - 20) && 
+         y >= (2*windowHeight/3 + 20 - (windowHeight/2 - 50)/4) && y <= (2*windowHeight/3 + 20 - (windowHeight/2 - 50)/4 + (windowHeight/2 - 50)/4))
+    return true;
+  return false;
+}
+
+// Pomoćna funkcija koja provjerava nalazi li se miš na 'CONTROLS' MENU izboru.
+boolean overControls(int x, int y){
+  if(x >= (windowWidth/4 - 150) && x <= (windowWidth/4 - 150 + windowWidth/4 - 20) && 
+      y >= (2*windowHeight/3 + 20) && y <= (2*windowHeight/3 + 20 + (windowHeight/2 - 50)/4))
+    return true;
+  return false;
+}
+
+// Pomoćna funkcija koja provjerava nalazi li se miš na 'QUIT' MENU izboru.
+boolean overQuit(int x, int y){
+  if(x >= (windowWidth/4 - 150) && x <= (windowWidth/4 - 150 + windowWidth/4 - 20) && 
+          y >= (2*windowHeight/3 + 20 + (windowHeight/2 - 50)/4) && y <= (2*windowHeight/3 + 20 + (windowHeight/2 - 50)/4 + (windowHeight/2 - 50)/4))
+    return true;
+  return false;
+}
+
+// Funkcija ažurira (ako je) na kojem je od 4 MENU izbora miš trenutno.
+// Inače ostaje na izboru odabranom strelicama.
+void update(int x, int y){
+  if(overOnePlayer(x, y)){
+    menuPick = MenuPick.ONEPLAYER;
+  }
+  else if(overTwoPlayers(x, y)){
+    menuPick = MenuPick.TWOPLAYERS;
+  }
+  else if(overControls(x, y)){
+    menuPick = MenuPick.CONTROLS;
+  }
+  else if(overQuit(x, y)){
+    menuPick = MenuPick.QUIT;
+  }
 }
 
 void draw() { 
@@ -361,6 +418,9 @@ void draw() {
       fill(255, 245, 0);
       textAlign(CENTER, CENTER);
       textFont(menuFont);
+      
+      update(mouseX, mouseY);       
+
       // Mijenjanje boje pozadine trenutno odabranog polja
       // Prvo polje - 1 PLAYER
       if (i < fieldHeight) {
@@ -407,8 +467,7 @@ void draw() {
       i += fieldHeight;
     }
     popStyle();
-    
-    
+        
     draw_transition(true);
     // Pritisak gumba Enter
     if (isEnter) {
@@ -418,16 +477,10 @@ void draw() {
         switchSound.play();
       } 
       if (menuPick == MenuPick.ONEPLAYER) {
-        quantity = 1;
-        createPlayers();
-        state = State.GAME;
-        setup();
+        play_game(1);
       }
       else if (menuPick == MenuPick.TWOPLAYERS) {
-        quantity = 2;
-        createPlayers();
-        state = State.GAME;
-        setup();
+        play_game(2);
       }
       else if (menuPick == MenuPick.CONTROLS) {
         state = State.INSTRUCTIONS;
@@ -481,6 +534,7 @@ void draw() {
       }
     }
     
+   
     
   }
   // ------------------------------------------------------------
@@ -849,6 +903,46 @@ void keyReleased() {
 }
 
 void mousePressed(){ 
+   
+  // Odabir opcija MENUa u stanju MAINMENU
+  if(state == State.MAINMENU){
+    // 1 player
+    if(overOnePlayer(mouseX, mouseY)){
+        reset_transition();
+        if(soundOn){
+          introSong.stop();
+          switchSound.play();
+        } 
+        play_game(1);  
+    }
+    // 2 players
+    if(overTwoPlayers(mouseX, mouseY)){
+        reset_transition();
+        if(soundOn){
+          introSong.stop();
+          switchSound.play();
+        } 
+        play_game(2);
+    }
+    // controls
+    if(overControls(mouseX, mouseY)){
+        reset_transition();
+        if(soundOn){
+          introSong.stop();
+          switchSound.play();
+        } 
+        state = State.INSTRUCTIONS;
+    }
+    // quit
+    if(overQuit(mouseX, mouseY)){
+        reset_transition();
+        if(soundOn){
+          introSong.stop();
+          switchSound.play();
+        } 
+        exit();
+    }
+  } 
   
   //Provjeravamo je li korisnik kliknuo na mute button
   if ((mouseX >= (windowWidth - 80-20) && mouseX <= (windowWidth - 80 + 20)) && (mouseY >= 25 && mouseY <= 55) && state == State.MAINMENU){
