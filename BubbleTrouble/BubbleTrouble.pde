@@ -28,7 +28,7 @@ int minutes, seconds, millis, delay_millisecs, getReady_millisecs, levelWon_mill
 
 //slike u MAINMENU
 PImage bubbleTrouble, redBall, torch, soundOnImg, soundOffImg, menuBackground, instructions, menuButton;
-PImage onePlayerCharacter, twoPlayersCharacter, controlsCharacter;
+PImage onePlayerCharacter, twoPlayersCharacter, controlsCharacter, quitCharacter;
 PImage bottomWall, topWall; // polovice zidova koje se pomiču
 PImage menuBackgroundSmall; // Za pokrivanje koplja, crta se u draw() kad je state == GAME.
 PImage player1_text, player2_text;
@@ -84,6 +84,7 @@ enum MenuPick {
 //Na početku je odabrano polje "1 PLAYER"
 MenuPick menuPick = MenuPick.ONEPLAYER;
 
+SoundFile onePlayerSound, twoPlayersSound, controlsSound;
 SoundFile introSong;
 SoundFile shootingSound;
 SoundFile collisionSound;
@@ -124,6 +125,7 @@ void setup() {
   onePlayerCharacter = loadImage("onePlayerCharacter.png");
   twoPlayersCharacter = loadImage("twoPlayersCharacter.png");
   controlsCharacter = loadImage("controlsCharacter.png"); 
+  quitCharacter = loadImage("quitCharacter.png"); 
   bubbleTrouble = loadImage("bubbleTrouble.png");
   redBall = loadImage("redBall.png");
   torch = loadImage("torch.png");
@@ -157,6 +159,9 @@ void setup() {
   switchSound = new SoundFile(this, path + "switch.mp3");
   punchSound = new SoundFile(this, path + "punch.mp3");
   levelDoneSound = new SoundFile(this, path + "end_of_level.mp3");
+  onePlayerSound = new SoundFile(this, path + "onePlayer.mp3");
+  twoPlayersSound = new SoundFile(this, path + "twoPlayers.mp3");
+  controlsSound = new SoundFile(this, path + "controls.mp3");
   
   //ako je korisnik pritisnuo enter, znaci da je odabrao jednu od opcija igre i ponovno se poziva setup, a ne zelimo da se intro ponovno reproducira
   if(soundOn && !isEnter)
@@ -391,7 +396,7 @@ void draw() {
       else {
         if (menuPick == MenuPick.QUIT) {
           // slika kao za 1 player
-          image(onePlayerCharacter, 2*windowWidth/3, windowHeight/2);
+          image(quitCharacter, 2*windowWidth/3, windowHeight/2);
           fill(221, 117, 87);
           rect(rectX, rectY - totalHeight/2 + i, rectX - 20, fieldHeight);
         }
@@ -433,10 +438,12 @@ void draw() {
     // Pritisak strelice dolje
     if (isDown) {
       if (menuPick == MenuPick.ONEPLAYER) {
+        twoPlayersSound.play();
         menuPick = MenuPick.TWOPLAYERS;
         isDown = false; //inace propada, tj. ulazi u sve uvjete redom
       }
       else if (menuPick == MenuPick.TWOPLAYERS) {
+        controlsSound.play();
         menuPick = MenuPick.CONTROLS;
         isDown = false;
       }
@@ -445,6 +452,7 @@ void draw() {
         isDown = false;
       }
       else {
+        onePlayerSound.play();
         menuPick = MenuPick.ONEPLAYER;  
         isDown = false;
       }
@@ -457,14 +465,17 @@ void draw() {
         isUp = false;
       }
       else if (menuPick == MenuPick.TWOPLAYERS) {
+        onePlayerSound.play();
         menuPick = MenuPick.ONEPLAYER;
         isUp = false;
       }
       else if (menuPick == MenuPick.CONTROLS) {
+        twoPlayersSound.play();
         menuPick = MenuPick.TWOPLAYERS;
         isUp = false;
       }
       else {
+        controlsSound.play();
         menuPick = MenuPick.CONTROLS; 
         isUp = false;
       }
