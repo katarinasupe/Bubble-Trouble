@@ -24,7 +24,7 @@ boolean game_completed = false, times_up = false, time_up_over = false;
 // Varijabla u kojoj pohranjujemo mogući broj bodova.
 int max_points;
 // Varijable za pohranjivanje vremena (dovoljno je uzeti minute i sekunde):
-int minutes, seconds, millis, delay_millisecs, getReady_millisecs, levelWon_millisecs, temp_millisecs;
+int minutes, seconds, millis, delay_millisecs, getReady_millisecs, levelWon_millisecs, temp_millisecs, paused_millisecs;
 
 //slike u MAINMENU
 PImage character, bubbleTrouble, redBall, torch, soundOnImg, soundOffImg, menuBackground, instructions, menuButton;
@@ -116,6 +116,7 @@ void setup() {
   minutes = minute();
   seconds = second();
   millis = millis();
+  paused_millisecs = 0;
   pause_game();
   
   //učitavanje slika za MAINMENU
@@ -578,8 +579,8 @@ void draw() {
     
     
     // Ispis vremenske trake
-    int remaining_millis = level.time - (millis() - millis);
-    if (lostLife || level_done) remaining_millis = level.time - (temp_millisecs - millis);
+    int remaining_millis = level.time - (millis() - millis) + paused_millisecs;
+    if (lostLife || level_done) remaining_millis = level.time - (temp_millisecs - millis) + paused_millisecs;
     else if (get_ready) remaining_millis = level.time;
     if (remaining_millis <= 0) {
       remaining_millis = 0;
@@ -605,7 +606,7 @@ void draw() {
     // Ako je igrač izgubio život, ali još uvijek ima preostale živote:
     if(lostLife && !is_game_over) {
       // Pišemo prikladni tekst za kratak period vremena:
-      if (millis() - delay_millisecs <= 500)
+      if (millis() - delay_millisecs <= 800)
         write_dummy_text("OUCH");
       else {
         lostLife = false;
@@ -625,6 +626,7 @@ void draw() {
         // Naznačimo da je sad trenutak kad se igrač treba spremati za ponovni početak igre.
         get_ready = true;
         getReady_millisecs = millis();
+        paused_millisecs = 0;
         // I ponovno 'pauziramo' igru (tj zaustavimo nove loptice).
         pause_game();
       }
@@ -672,6 +674,7 @@ void draw() {
           // Naznačimo da je sad trenutak kad se igrač treba spremati za ponovni početak igre.
           get_ready = true;
           getReady_millisecs = millis();
+          paused_millisecs = 0;
           // I ponovno 'pauziramo' igru (tj zaustavimo nove loptice).
           pause_game();
         }
@@ -712,6 +715,7 @@ void draw() {
       else{
         new_points_added = false;
         level_done = false;
+        paused_millisecs = 0;
         restart_the_balls();
         millis = millis();
       }        
@@ -846,11 +850,13 @@ void mousePressed(){
   
   // Provjera je li korisnik kliknuo pauzu.
   if((mouseX >= (windowWidth - 80-20) && mouseX <= (windowWidth - 80 + 20)) && (mouseY >= 25 && mouseY <= 55) && state == State.GAME){
+    temp_millisecs = millis();
     state = State.PAUSE;
   }
   
   if(state == State.PAUSE){
     if((mouseX >= (windowWidth/2 - 450/2) && mouseX <= (windowWidth/2 + 450/2)) && mouseY >= (windowHeight/2 - 100) && mouseY <= (windowHeight/2 - 20)){
+      paused_millisecs += millis() - temp_millisecs;
       state = State.GAME;
     }
     else if(mouseX >= (windowWidth/2 - 450/2) && mouseX <= (windowWidth/2 + 450/2) && mouseY >= (windowHeight/2 + 10) && mouseY <= (windowHeight/2 + 90)){
