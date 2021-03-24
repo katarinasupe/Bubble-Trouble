@@ -42,7 +42,6 @@ float transitionFactor = 5; // Za koliko se piksela zid pomiče svaki frame
 float bottomWallHeight = windowHeight/2 - transitionFactor;
 float topWallHeight = transitionFactor;
 float totalMoveCtr = 0; // Kontrola izlaženja van ekrana, kada pomicanje više nije potrebno
-boolean openWall = true; // true kada se zid 'otvara', false kada se 'zatvara'
 
 //slike u GAME
 //slike igrača
@@ -265,20 +264,12 @@ void restart_the_balls() {
 }
 
 // Funkcija za crtanje zida koji se pomiče pri prijelazu s glavnog izbornika u igru
-void draw_transition(boolean openWall) {
-  if (topWall.height - totalMoveCtr > 0 && openWall) {
+void draw_transition() {
+  if (topWall.height - totalMoveCtr > 0) {
     topWallHeight -= transitionFactor;
     bottomWallHeight += transitionFactor;
     image(topWall, 0, topWallHeight);
     image(bottomWall, 0, bottomWallHeight);
-    totalMoveCtr += transitionFactor;
-  }
-  // nije bas dobro jos i ne znan di koristit tocno
-  else if (topWall.height - totalMoveCtr > 0 && !openWall) {
-    topWallHeight -= transitionFactor;
-    bottomWallHeight += transitionFactor;
-    image(topWall, 0, bottomWallHeight - windowHeight/2 - topWall.height);
-    image(bottomWall, 0, topWallHeight + windowHeight);    
     totalMoveCtr += transitionFactor;
   }
 }
@@ -425,7 +416,7 @@ void draw() {
       // Prvo polje - 1 PLAYER
       if (i < fieldHeight) {
         if (menuPick == MenuPick.ONEPLAYER) {
-          image(onePlayerCharacter, 2*windowWidth/3, windowHeight/2);
+          image(onePlayerCharacter, 3*windowWidth/4 - 42, windowHeight/2);
           fill(221, 117, 87);
           rect(rectX, rectY - totalHeight/2 + i, rectX - 20, fieldHeight);
         }
@@ -468,7 +459,7 @@ void draw() {
     }
     popStyle();
         
-    draw_transition(true);
+    draw_transition();
     // Pritisak gumba Enter
     if (isEnter) {
       reset_transition();
@@ -547,7 +538,7 @@ void draw() {
     imageMode(CENTER);   
     image(menuButton, windowWidth/2, 5*windowHeight/6);
     popStyle();    
-    draw_transition(true);
+    draw_transition();
   } 
   // ------------------------------------------------------------
   // GAME
@@ -673,7 +664,7 @@ void draw() {
     stroke(0);
     strokeWeight(1);
    
-    draw_transition(true); // Crtanje zidova koji se pomiču
+    draw_transition(); // Crtanje zidova koji se pomiču
      
     // dodati neki delay igre?
     // Ako je igrač izgubio život, ali još uvijek ima preostale živote:
@@ -874,7 +865,7 @@ void draw() {
       stroke(0);
       strokeWeight(1);
       
-      draw_transition(true);
+      draw_transition();
     }
 }
 
