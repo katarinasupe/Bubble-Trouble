@@ -38,7 +38,9 @@ PImage level1;
 PFont menuFont;
 PFont gameFont;
 PImage introRedBall, arrow, redLayer;
-
+PImage bubble, trouble;
+float bubbleX, bubbleY, currentBubbleY, troubleX, troubleY, currentTroubleY;
+boolean isBubblePlaced;
 
 float transitionFactor = 5; // Za koliko se piksela zid pomiče svaki frame
 float bottomWallHeight = windowHeight/2 - transitionFactor;
@@ -157,6 +159,8 @@ void setup() {
   introRedBall = loadImage("introRedBall.png");
   redLayer = loadImage("redLayer.png");
   arrow = loadImage("arrow.png");
+  bubble = loadImage("bubble.png");
+  trouble = loadImage("trouble.png");
   
   //učitavanje fonta za MAINMENU
   menuFont = loadFont("GoudyStout-28.vlw");
@@ -241,6 +245,19 @@ void setup() {
   for (int i = 0; i < 7; ++i)
     // "Eksperimentalno" odabrana formula.
     splitBallJumpHeight[i] = (float)sq(gameHeight)/(800 + i*500);
+       
+  setIntroCoordinates();
+}
+
+// Funkcija koja postavlja početne i krajnje koordinate teksta u INTRO stanju
+void setIntroCoordinates() {
+  bubbleX = 2*windowWidth/3;
+  bubbleY = windowHeight/2;
+  currentBubbleY = windowHeight + bubble.height/2;
+  troubleX = 2*windowWidth/3;
+  troubleY = windowHeight/2 + bubble.height;
+  currentTroubleY = windowHeight + trouble.height/2;
+  isBubblePlaced = false;
 }
 
 void createPlayers() {
@@ -282,7 +299,7 @@ void restart_the_balls() {
 }
 
 // Funkcija za crtanje zida koji se pomiče pri prijelazu s glavnog izbornika u igru
-void draw_transition() {
+void drawTransition() {
   if (topWall.height - totalMoveCtr > 0) {
     topWallHeight -= transitionFactor;
     bottomWallHeight += transitionFactor;
@@ -374,6 +391,21 @@ void draw() {
     background(menuBackground);
     imageMode(CENTER);
     image(introRedBall, windowWidth/2, windowHeight/2);
+    if(currentBubbleY > bubbleY) {
+      currentBubbleY -= 5;
+      image(bubble, bubbleX, currentBubbleY);
+    }
+    else {
+      image(bubble, bubbleX, bubbleY);
+      isBubblePlaced = true;
+    }
+    if(isBubblePlaced && currentTroubleY > troubleY) {
+       currentTroubleY -= 5;
+      image(trouble, troubleX, currentTroubleY);
+    }
+    else if(isBubblePlaced) {
+      image(trouble, 2*windowWidth/3, windowHeight/2 + bubble.height);
+    }
     image(quitCharacter, windowWidth/5, windowHeight/3);
     image(redLayer, windowWidth/2, windowHeight/2);
     imageMode(CORNER);
@@ -493,7 +525,7 @@ void draw() {
       i += fieldHeight;
     }
     popStyle();
-    draw_transition();
+    drawTransition();
     // Pritisak gumba Enter
     if (isEnter) {
       reset_transition();
@@ -572,7 +604,7 @@ void draw() {
     imageMode(CENTER);   
     image(menuButton, windowWidth/2, 5*windowHeight/6);
     popStyle();    
-    draw_transition();
+    drawTransition();
   } 
   // ------------------------------------------------------------
   // GAME
@@ -701,7 +733,7 @@ void draw() {
     stroke(0);
     strokeWeight(1);
    
-    draw_transition(); // Crtanje zidova koji se pomiču
+    drawTransition(); // Crtanje zidova koji se pomiču
     // dodati neki delay igre?
     
     // Crtanje supermoći koje padaju ili nisu pokupljene.
@@ -933,7 +965,7 @@ void draw() {
       stroke(0);
       strokeWeight(1);
       
-      draw_transition();
+      drawTransition();
     }
 }
 
