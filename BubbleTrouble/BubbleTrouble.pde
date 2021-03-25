@@ -25,16 +25,15 @@ boolean game_completed = false, times_up = false, time_up_over = false;
 // Varijabla u kojoj pohranjujemo mogući broj bodova.
 int max_points;
 // Varijable za pohranjivanje vremena (dovoljno je uzeti minute i sekunde):
-int minutes, seconds, millis, delay_millisecs, getReady_millisecs, levelWon_millisecs, temp_millisecs, paused_millisecs;
+int minutes, seconds, millis, delay_millisecs, getReady_millisecs, levelWon_millisecs, temp_millisecs, paused_millisecs, gameover_millisecs;
+boolean timer = false;
 
 //slike u MAINMENU
 PImage bubbleTrouble, redBall, torch, soundOnImg, soundOffImg, menuBackground, instructions, menuButton;
 PImage onePlayerCharacter, twoPlayersCharacter, controlsCharacter, quitCharacter;
 PImage bottomWall, topWall; // polovice zidova koje se pomiču
 PImage menuBackgroundSmall; // Za pokrivanje koplja, crta se u draw() kad je state == GAME.
-PImage player1_text, player2_text;
 PImage fire;
-PImage level1;
 PFont menuFont;
 PFont gameFont;
 PImage introRedBall, arrow, redLayer;
@@ -48,21 +47,16 @@ float topWallHeight = transitionFactor;
 float totalMoveCtr = 0; // Kontrola izlaženja van ekrana, kada pomicanje više nije potrebno
 
 //slike u GAME
-//slike igrača
-ArrayList<PImage> player1_images;
+ArrayList<PImage> player1_images; //slike igrača
 ArrayList<PImage> player2_images;
-// Slika koplja.
-PImage spearImg;
-// Slika pozadine levela
-//PImage levelBackground;
-// Slika broja levela.
-PImage levelImg;
-// Slika za 'pauza' gumb.
-PImage pauseImg;
-// Slika za restart gumb.
-PImage restartImg;
-// Slika bodlji na vrhu ekrana.
-PImage thornsImg;
+PImage player1_text, player2_text;
+PImage spearImg; // Slika koplja.
+//PImage levelBackground;  // Slika pozadine levela
+PImage levelImg; // Slika broja levela.
+PImage pauseImg; // Slika za 'pauza' gumb.
+PImage restartImg; // Slika za restart gumb.
+PImage thornsImg; // Slika bodlji na vrhu ekrana.
+
 
 boolean isLeft, isRight, isSpace, isA, isD, isS, isUp, isDown, isEnter;
 final int ENTER_CODE = 10; // Moze biti problema s ovim
@@ -134,6 +128,7 @@ void setup() {
   seconds = second();
   millis = millis();
   paused_millisecs = 0;
+  timer = false; //ovo isto treba prebaciti u startgame
   pause_game();
   
   // učitavanje slika za MAINMENU
@@ -151,7 +146,7 @@ void setup() {
   menuButton = loadImage("menuButton.png");
   player1_text = loadImage("player1_text.png");
   player2_text = loadImage("player2_text.png");
-  levelImg = loadImage("level1.png");
+  //levelImg = loadImage("level1.png");
   //levelBackground = loadImage("level1_background.png");
   topWall = loadImage("topWall.png");
   bottomWall = loadImage("bottomWall.png");
@@ -184,11 +179,6 @@ void setup() {
   onePlayerSound = new SoundFile(this, path + "onePlayer.mp3");
   twoPlayersSound = new SoundFile(this, path + "twoPlayers1.mp3");
   controlsSound = new SoundFile(this, path + "controls1.mp3");
-  
-  //ako je korisnik pritisnuo enter, znaci da je odabrao jednu od opcija igre i ponovno se poziva setup, a ne zelimo da se intro ponovno reproducira
-  /*if(soundOn && !isEnter)
-    introSong.loop();
-  */
   
   //zelimo da intro svira samo u intro state-u
   if(state == State.INTRO) {
@@ -337,7 +327,7 @@ void resetGame() {
   menuPick = MenuPick.ONEPLAYER;
   resetTransition();
   if(soundOn) 
-    introSong.loop();
+    switchSound.play();
 }
 
 // Pomoćna funkcija koja provjerava nalazi li se miš na '1 PLAYER' MENU izboru.
@@ -537,7 +527,6 @@ void draw() {
     if (isEnter) {
       resetTransition();
       if(soundOn){
-        introSong.stop();
         switchSound.play();
       } 
       if (menuPick == MenuPick.ONEPLAYER) {
@@ -555,12 +544,14 @@ void draw() {
     // Pritisak strelice dolje
     if (isDown) {
       if (menuPick == MenuPick.ONEPLAYER) {
-        twoPlayersSound.play();
+        if(soundOn)
+          twoPlayersSound.play();
         menuPick = MenuPick.TWOPLAYERS;
         isDown = false; //inace propada, tj. ulazi u sve uvjete redom
       }
       else if (menuPick == MenuPick.TWOPLAYERS) {
-        controlsSound.play();
+        if(soundOn)
+          controlsSound.play();
         menuPick = MenuPick.CONTROLS;
         isDown = false;
       }
@@ -569,7 +560,8 @@ void draw() {
         isDown = false;
       }
       else {
-        onePlayerSound.play();
+        if(soundOn)
+          onePlayerSound.play();
         menuPick = MenuPick.ONEPLAYER;  
         isDown = false;
       }
@@ -582,17 +574,20 @@ void draw() {
         isUp = false;
       }
       else if (menuPick == MenuPick.TWOPLAYERS) {
-        onePlayerSound.play();
+        if(soundOn)
+          onePlayerSound.play();
         menuPick = MenuPick.ONEPLAYER;
         isUp = false;
       }
       else if (menuPick == MenuPick.CONTROLS) {
-        twoPlayersSound.play();
+        if(soundOn)
+          twoPlayersSound.play();
         menuPick = MenuPick.TWOPLAYERS;
         isUp = false;
       }
       else {
-        controlsSound.play();
+        if(soundOn)
+          controlsSound.play();
         menuPick = MenuPick.CONTROLS; 
         isUp = false;
       }
@@ -605,7 +600,6 @@ void draw() {
   // INSTRUCTIONS
   // ------------------------------------------------------------
   else if (state == State.INSTRUCTIONS) {
-    introSong.stop();
     background(instructions);
     pushStyle();
     imageMode(CENTER);   
@@ -617,7 +611,6 @@ void draw() {
   // GAME
   // ------------------------------------------------------------
   else if (state == State.GAME) {
-    introSong.stop();
     
     // Provjeri kolizije.
     for (Player player : players) {
@@ -713,6 +706,7 @@ void draw() {
     }
     
     //Ispis levela i baklji
+    setLevelImg(); //učitava sliku levela
     image(levelImg, windowWidth/2 - 136/2, windowHeight - 30 - 90 + 15);
     image(torch, windowWidth/2 - 124/2 - 50 - 33, gameHeight + (windowHeight - gameHeight)/2 - 118/2 + 12);
     image(torch, windowWidth/2 + 124/2 + 50, gameHeight + (windowHeight - gameHeight)/2 - 118/2 + 12);
@@ -857,20 +851,30 @@ void draw() {
     // Ako je igra gotova ili ako je zadnji level
     if(is_game_over || game_completed) {
       for (Player player : players) player.overall_points += player.level_points;
-      resetTransition();
-      if(soundOn) {
-        switchSound.play();
+      
+      //pamtimo koje je trenutno vrijeme
+      if(!timer){
+        gameover_millisecs = millis();
+        timer = true;
       }
-      state = State.RESULTS;
+      
+      //prvo ispisemo poruku na 1 sek, a zatim prebacimo na result
+      if (millis() - gameover_millisecs <= 1000) {
+        
+        if(is_game_over) {
+          write_dummy_text("GAME OVER");
+        } else if( game_completed) {
+          write_dummy_text("YOU WIN");
+        }
+         
+      } else { 
+        resetTransition();
+        if(soundOn) {
+          switchSound.play();
+        }
+        state = State.RESULTS;
+      }
     }
-    
-   /* // Ako je zadnji level pobjeđen ispisuje se čestitka.
-    if(game_completed){
-      resetTransition();
-      if(soundOn)
-        switchSound.play();
-      state = State.RESULTS;
-    }*/
     
     // Ako je neki drugi level pobjeđen, prikazuje se odgovarajuća poruka i prelazi na novi level.
     else if (level_done) {
@@ -957,13 +961,9 @@ void draw() {
         }
         j++;
       }
-      
+        
       image(menuButton, windowWidth/2 - menuButton.width/2, windowHeight - menuButton.height - 50);
 
-      
-      if(is_game_over) write_dummy_text("GAME OVER");
-      else if(game_completed) write_dummy_text("YOU WIN");
-      
       fill(255);
       stroke(0);
       strokeWeight(1);
@@ -1004,7 +1004,6 @@ void mousePressed(){
     if(overOnePlayer(mouseX, mouseY)){
         resetTransition();
         if(soundOn){
-          introSong.stop();
           switchSound.play();
         } 
         play_game(1);  
@@ -1013,7 +1012,6 @@ void mousePressed(){
     if(overTwoPlayers(mouseX, mouseY)){
         resetTransition();
         if(soundOn){
-          introSong.stop();
           switchSound.play();
         } 
         play_game(2);
@@ -1022,7 +1020,6 @@ void mousePressed(){
     if(overControls(mouseX, mouseY)){
         resetTransition();
         if(soundOn){
-          introSong.stop();
           switchSound.play();
         } 
         state = State.INSTRUCTIONS;
@@ -1031,7 +1028,6 @@ void mousePressed(){
     if(overQuit(mouseX, mouseY)){
         resetTransition();
         if(soundOn){
-          introSong.stop();
           switchSound.play();
         } 
         exit();
@@ -1043,11 +1039,9 @@ void mousePressed(){
     
     if(soundOn) {
      soundOn = false;
-     introSong.stop(); 
     }
     else {
      soundOn = true;
-     introSong.loop();
     }
   }
   
@@ -1094,6 +1088,7 @@ void mousePressed(){
   // Provjera je li korisnik kliknuo na gumb strelica u State.INTRO
   if( (mouseX >= (windowWidth - arrow.width)) && (mouseX <= windowWidth) && (mouseY >= windowHeight - arrow.height) && (mouseY <= windowHeight) && (state == State.INTRO) ) {
     introSong.stop();
+    switchSound.play();
     state = State.MAINMENU;
   }
 }
@@ -1229,8 +1224,13 @@ void levelWon() {
   // Postavljamo kugle i supermoći za odgovarajući level.
   if(current_level < 5){
     level = new Level(++current_level);
-    String levelImgName = "level" + str(current_level) + ".png";
-    levelImg = loadImage(levelImgName);
+    setLevelImg();
+    /*String levelImgName = "level" + str(current_level) + ".png";
+    try{
+      levelImg = loadImage(levelImgName);
+    } catch (Exception e) {
+      print("Slika ne postoji");
+    }*/
     balls = level.balls;
     superpowers = level.superpowers;
   }
@@ -1239,6 +1239,15 @@ void levelWon() {
   }  
   
   pause_game();
+}
+
+void setLevelImg() {
+  String levelImgName = "level" + str(current_level) + ".png";
+    try{
+      levelImg = loadImage(levelImgName);
+    } catch (Exception e) {
+      print("Slika ne postoji");
+    }
 }
 
 // Funkcija koja aktivira supermoć ako već nije aktivirana neka druga i vraća informaciju o uspješnom/neuspješnom aktiviranju.
