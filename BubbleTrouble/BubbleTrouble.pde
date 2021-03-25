@@ -123,6 +123,7 @@ void setup() {
   current_level = 1;
   level = new Level(1);
   is_game_over = false;
+  game_completed  = false;
   level_done = false;
   lostLife = true;
   balls.clear();
@@ -181,12 +182,18 @@ void setup() {
   punchSound = new SoundFile(this, path + "punch.mp3");
   levelDoneSound = new SoundFile(this, path + "end_of_level.mp3");
   onePlayerSound = new SoundFile(this, path + "onePlayer.mp3");
-  twoPlayersSound = new SoundFile(this, path + "twoPlayers.mp3");
-  controlsSound = new SoundFile(this, path + "controls.mp3");
+  twoPlayersSound = new SoundFile(this, path + "twoPlayers1.mp3");
+  controlsSound = new SoundFile(this, path + "controls1.mp3");
   
   //ako je korisnik pritisnuo enter, znaci da je odabrao jednu od opcija igre i ponovno se poziva setup, a ne zelimo da se intro ponovno reproducira
-  if(soundOn && !isEnter)
+  /*if(soundOn && !isEnter)
     introSong.loop();
+  */
+  
+  //zelimo da intro svira samo u intro state-u
+  if(state == State.INTRO) {
+    introSong.loop();
+  }
   
   //slike igrača
   player1_images = new ArrayList<PImage>(); 
@@ -957,10 +964,6 @@ void draw() {
       if(is_game_over) write_dummy_text("GAME OVER");
       else if(game_completed) write_dummy_text("YOU WIN");
       
-      /*if(soundOn) {
-        introSong.loop(); //Ovo iz nekog razloga ne radi
-      }*/
-      
       fill(255);
       stroke(0);
       strokeWeight(1);
@@ -1070,6 +1073,17 @@ void mousePressed(){
     }    
   }
   
+  //Provjera je li korisnik kliknuo na resetBtn
+  if( mouseX >= (windowWidth - 55) && mouseX<= (windowWidth - 55 + restartImg.width) && mouseY >= 25 && mouseY <= (25 + restartImg.height) && state == State.GAME) {
+      resetTransition();
+      if(soundOn) {
+        switchSound.play();
+      }
+      
+      if(players.size() == 1) play_game(1);
+      else if(players.size() == 2) play_game(2);
+  }
+  
   //provjera je li korisnik kliknuo na gumb meni u State.RESULTS
   if( mouseX >= (windowWidth/2 - menuButton.width/2) && mouseX <= (windowWidth/2 + menuButton.width/2) && mouseY>= (windowHeight - menuButton.height - 50) && mouseY<= (windowHeight - 50) && state == State.RESULTS) {
      if(soundOn)
@@ -1079,6 +1093,7 @@ void mousePressed(){
   
   // Provjera je li korisnik kliknuo na gumb strelica u State.INTRO
   if( (mouseX >= (windowWidth - arrow.width)) && (mouseX <= windowWidth) && (mouseY >= windowHeight - arrow.height) && (mouseY <= windowHeight) && (state == State.INTRO) ) {
+    introSong.stop();
     state = State.MAINMENU;
   }
 }
