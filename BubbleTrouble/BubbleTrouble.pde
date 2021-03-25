@@ -17,7 +17,7 @@ boolean is_game_over = false;
 boolean get_ready = false;
 boolean new_points_added;
 // Varijabla koja pamti na kojem je levelu igrač trenutno.
-int current_level = 1;
+int current_level;
 Level level;
 // Varijable koja pamti je li završen level:
 boolean level_done = false;
@@ -28,25 +28,15 @@ int max_points;
 int minutes, seconds, millis, delay_millisecs, getReady_millisecs, levelWon_millisecs, temp_millisecs, paused_millisecs, gameover_millisecs;
 boolean timer = false;
 
-//slike u MAINMENU
-PImage bubbleTrouble, redBall, torch, soundOnImg, soundOffImg, menuBackground, instructions, menuButton;
+// Slike u INTRO stanju
+PImage introRedBall, arrow, redLayer, bubble, trouble;
+
+// Slike u MAINMENU stanju
+PImage bubbleTrouble, redBall, torch, fire, soundOnImg, soundOffImg, menuBackground, instructions, menuButton;
 PImage onePlayerCharacter, twoPlayersCharacter, controlsCharacter, quitCharacter;
 PImage bottomWall, topWall; // polovice zidova koje se pomiču
-PImage menuBackgroundSmall; // Za pokrivanje koplja, crta se u draw() kad je state == GAME.
-PImage fire;
-PFont menuFont;
-PFont gameFont;
-PImage introRedBall, arrow, redLayer;
-PImage bubble, trouble;
-float bubbleX, bubbleY, currentBubbleY, troubleX, troubleY, currentTroubleY;
-boolean isBubblePlaced;
 
-float transitionFactor = 5; // Za koliko se piksela zid pomiče svaki frame
-float bottomWallHeight = windowHeight/2 - transitionFactor;
-float topWallHeight = transitionFactor;
-float totalMoveCtr = 0; // Kontrola izlaženja van ekrana, kada pomicanje više nije potrebno
-
-//slike u GAME
+// Slike u GAME stanju
 ArrayList<PImage> player1_images; //slike igrača
 ArrayList<PImage> player2_images;
 PImage player1_text, player2_text;
@@ -56,10 +46,25 @@ PImage levelImg; // Slika broja levela.
 PImage pauseImg; // Slika za 'pauza' gumb.
 PImage restartImg; // Slika za restart gumb.
 PImage thornsImg; // Slika bodlji na vrhu ekrana.
+PImage menuBackgroundSmall; // Za pokrivanje koplja, crta se u draw() kad je state == GAME.
 
+// Globalne varijable potrebne za pozicioniranje 'Bubble Trouble' teksta u INTRO stanju
+float bubbleX, bubbleY, currentBubbleY, troubleX, troubleY, currentTroubleY;
+boolean isBubblePlaced, isTroublePlaced, isGunPlaced, isBubbleGone, isTroubleGone;
 
+// Početne vrijednosti vezane uz pomicanje zidova (transition)
+float transitionFactor = 5; // Za koliko se piksela zid pomiče svaki frame
+float bottomWallHeight = windowHeight/2 - transitionFactor;
+float topWallHeight = transitionFactor;
+float totalMoveCtr = 0; // Kontrola izlaženja van ekrana, kada pomicanje više nije potrebno
+
+// Fontovi
+PFont menuFont;
+PFont gameFont;
+
+// Globalne varijable potrebne za provjeru pritiska određene tipke na tipkovnici
 boolean isLeft, isRight, isSpace, isA, isD, isS, isUp, isDown, isEnter;
-final int ENTER_CODE = 10; // Moze biti problema s ovim
+final int ENTER_CODE = 10; // Tipka 'Enter' je specijalna tipka
 
 // Moguća stanja programa. Ovisno o varijabli state, u draw()
 // se iscrtavaju različiti prozori.
@@ -74,16 +79,17 @@ enum State {
 // Na početku igre vidimo stanje INTRO
 State state = State.INTRO; 
 
-//Mogući odabiri u meniju  
+// Mogući odabiri u meniju  
 enum MenuPick {
   ONEPLAYER,
   TWOPLAYERS,
   CONTROLS,
   QUIT
 }
-//Na početku je odabrano polje "1 PLAYER"
+// Na početku je odabrano polje "1 PLAYER"
 MenuPick menuPick = MenuPick.ONEPLAYER;
 
+// Zvukovi koji se pojavljuju u igri
 SoundFile onePlayerSound, twoPlayersSound, controlsSound;
 SoundFile introSong;
 SoundFile shootingSound;
@@ -91,20 +97,22 @@ SoundFile collisionSound;
 SoundFile switchSound;
 SoundFile punchSound;
 SoundFile levelDoneSound;
-String path;
+String path; // Putanja koja će se koristiti za pronalaženje putanje zvukova
 
+// Funkcija koja vraća zvuk shootingSound
 SoundFile getShootingSound(){
     return shootingSound;
 }
 
-boolean soundOn = true;
+boolean soundOn = true; // Na početku je zvuk uključen
+// Funkcija koja vraća vrijednost boolean varijable soundOn
 boolean getSound() {
   return soundOn;
 }
 
 boolean lostLife = false;
 
-// supermoći (štit, život)
+// Supermoći (štit, život)
 String activeSuperpower = "";
 PImage activeSuperpowerImg;
 float xSuperpowerPosition, ySuperpowerPosition;
@@ -131,7 +139,18 @@ void setup() {
   timer = false; //ovo isto treba prebaciti u startgame
   pause_game();
   
-  // učitavanje slika za MAINMENU
+  // ----------------------------------------------------------
+  // ---------------------UČITAVANJE SLIKA---------------------
+  // ----------------------------------------------------------
+  
+  // -------------Učitavanje slika za INTRO stanje-------------
+  introRedBall = loadImage("introRedBall.png");
+  redLayer = loadImage("redLayer.png");
+  arrow = loadImage("arrow.png");
+  bubble = loadImage("bubble.png");
+  trouble = loadImage("trouble.png");
+  
+  // -------------Učitavanje slika za MAINMENU stanje-------------
   onePlayerCharacter = loadImage("onePlayerCharacter.png");
   twoPlayersCharacter = loadImage("twoPlayersCharacter.png");
   controlsCharacter = loadImage("controlsCharacter.png"); 
@@ -142,49 +161,17 @@ void setup() {
   soundOnImg = loadImage("soundOn.png");
   soundOffImg = loadImage("soundOff.png");
   menuBackground = loadImage("menuBackground2.png"); // Napomena: Koristi se i u crtanju igre kad je state == GAME.
+  fire = loadImage("fire.png");
+  
+  // -------------Učitavanje slika za INSTRUCTIONS stanje-------------
   instructions = loadImage("instructions.png");
   menuButton = loadImage("menuButton.png");
-  player1_text = loadImage("player1_text.png");
-  player2_text = loadImage("player2_text.png");
-  //levelImg = loadImage("level1.png");
-  //levelBackground = loadImage("level1_background.png");
-  topWall = loadImage("topWall.png");
-  bottomWall = loadImage("bottomWall.png");
-  fire = loadImage("fire.png");
-  // učitavanje slika za INTRO
-  introRedBall = loadImage("introRedBall.png");
-  redLayer = loadImage("redLayer.png");
-  arrow = loadImage("arrow.png");
-  bubble = loadImage("bubble.png");
-  trouble = loadImage("trouble.png");
   
-  //učitavanje fonta za MAINMENU
-  menuFont = loadFont("GoudyStout-28.vlw");
-  
-  //učitavanje fonta za GAME
-  gameFont = loadFont("GoudyStout-23.vlw");
-  
-  // učitavanje slike za pauzu u GAME
+
+  // -------------Učitavanje slika za GAME stanje-------------
   pauseImg = loadImage("pause.png");
   restartImg = loadImage("restart.png");
-  
-  path = sketchPath("");
-  path = path + "\\sounds\\";
-  introSong = new SoundFile(this, path + "intro.mp3");
-  shootingSound = new SoundFile(this, path + "shooting.mp3");
-  collisionSound = new SoundFile(this, path + "collision.mp3");
-  switchSound = new SoundFile(this, path + "switch.mp3");
-  punchSound = new SoundFile(this, path + "punch.mp3");
-  levelDoneSound = new SoundFile(this, path + "end_of_level.mp3");
-  onePlayerSound = new SoundFile(this, path + "onePlayer.mp3");
-  twoPlayersSound = new SoundFile(this, path + "twoPlayers1.mp3");
-  controlsSound = new SoundFile(this, path + "controls1.mp3");
-  
-  //zelimo da intro svira samo u intro state-u
-  if(state == State.INTRO) {
-    introSong.loop();
-  }
-  
+  // -----------------------------------------------------------
   //slike igrača
   player1_images = new ArrayList<PImage>(); 
   player1_images.add(loadImage("player1_back.png"));//0
@@ -193,7 +180,6 @@ void setup() {
   player1_images.add(loadImage("player1_back_shield.png"));//3
   player1_images.add(loadImage("player1_left_shield.png"));//4
   player1_images.add(loadImage("player1_right_shield.png"));//5
-  
   if(quantity == 2) {
     player2_images = new ArrayList<PImage>();
     player2_images.add(loadImage("player2_back.png"));//0
@@ -203,11 +189,10 @@ void setup() {
     player2_images.add(loadImage("player2_left_shield.png"));//4
     player2_images.add(loadImage("player2_right_shield.png"));//5 
   }
-  
+  // ------------------------------------------------------------
   // Učitavanje slike bodlji (trebala bi već biti širine 1024, kao i gameHeight).
   // Treba resize ako se gameHeight promijeni.
-  thornsImg = loadImage("thorns.png");
-  
+  thornsImg = loadImage("thorns.png");  
   // ------------------------------------------------------------
   // Učitavanje slike koplja.
   spearImg = loadImage("spear.png");
@@ -232,6 +217,48 @@ void setup() {
   ballImgs.put(BallColor.PURPLE, loadImage("ballPurple.png"));
   ballImgs.put(BallColor.YELLOW, loadImage("ballYellow.png"));
   
+  // -------------Učitavanje slika za RESULTS stanje-------------
+  player1_text = loadImage("player1_text.png");
+  player2_text = loadImage("player2_text.png");  
+  
+  // -------------Učitavanje slika za tranziciju-------------
+  topWall = loadImage("topWall.png");
+  bottomWall = loadImage("bottomWall.png");
+  
+  // KORISTI LI SE OVO?
+  //levelImg = loadImage("level1.png");
+  //levelBackground = loadImage("level1_background.png");
+  
+  // ------------------------------------------------------------
+  // ---------------------UČITAVANJE FONTOVA---------------------
+  // ------------------------------------------------------------
+  //učitavanje fonta za MAINMENU
+  menuFont = loadFont("GoudyStout-28.vlw");  
+  //učitavanje fonta za GAME
+  gameFont = loadFont("GoudyStout-23.vlw");
+  
+  // ------------------------------------------------------------
+  // ---------------------UČITAVANJE ZVUKOVA---------------------
+  // ------------------------------------------------------------
+  path = sketchPath("");
+  path = path + "\\sounds\\";
+  introSong = new SoundFile(this, path + "intro.mp3");
+  shootingSound = new SoundFile(this, path + "shooting.mp3");
+  collisionSound = new SoundFile(this, path + "collision.mp3");
+  switchSound = new SoundFile(this, path + "switch.mp3");
+  punchSound = new SoundFile(this, path + "punch.mp3");
+  levelDoneSound = new SoundFile(this, path + "end_of_level.mp3");
+  onePlayerSound = new SoundFile(this, path + "onePlayer.mp3");
+  twoPlayersSound = new SoundFile(this, path + "twoPlayers1.mp3");
+  controlsSound = new SoundFile(this, path + "controls1.mp3");
+  
+  // Želimo da intro svira samo u INTRO state-u
+  if(state == State.INTRO) {
+    introSong.loop();
+  }
+  
+  setIntroCoordinates(); // Postavljamo željene koordinate animiranog teksta u INTRO
+  
   // ------------------------------------------------------------
   // Računanje visina do koje loptice skaču. Varijabla i je u ovom
   // slučaju sizeLevel. ballJumpHeight[0] ne koristimo.
@@ -242,8 +269,6 @@ void setup() {
   for (int i = 0; i < 7; ++i)
     // "Eksperimentalno" odabrana formula.
     splitBallJumpHeight[i] = (float)sq(gameHeight)/(800 + i*500);
-       
-  setIntroCoordinates();
 }
 
 // Funkcija koja postavlja početne i krajnje koordinate teksta u INTRO stanju
@@ -255,17 +280,21 @@ void setIntroCoordinates() {
   troubleY = windowHeight/2 + bubble.height;
   currentTroubleY = windowHeight + trouble.height/2;
   isBubblePlaced = false;
+  isTroublePlaced = false;
+  isGunPlaced = false;
+  isBubbleGone = false;
+  isTroubleGone = false;
 }
 
+// Funkcija koja ovisno o postavljenom broju igrača, popunjava listu i podešava početne pozicije igrača
 void createPlayers() {
-  // Ovisno o postavljenom broju igrača, popunjavamo listu i podešavamo početne pozicije
   players.clear();
   for (int i = 0; i < quantity; i++)
     players.add(new Player((i+1)*windowWidth/(quantity+1), i+1));
     ellipseMode(RADIUS); // Crtanje kružnica kao (srediste.x, srediste.y, radijus).
 }
 
-// Pomoćna funkcija za pisanje poruka tokom igre:
+// Pomoćna funkcija za pisanje poruka tokom igre
 void write_dummy_text(String _text) {
   textAlign(CENTER, CENTER);
   stroke(183, 180, 16);
@@ -321,13 +350,13 @@ void play_game(int _quantity){
     setup();
 }
 
-// Vraćanje u glavni izbornik tako da odabir bude defaultan te se zvuk pokrene
+// Vraćanje u glavni izbornik tako da odabir bude defaultan
 void resetGame() {
   state = State.MAINMENU;
   menuPick = MenuPick.ONEPLAYER;
-  resetTransition();
+  resetTransition(); // tako da se ispravno nacrta iduća tranzicija u MAINMENU
   if(soundOn) 
-    switchSound.play();
+    switchSound.play(); // tranzicija (zidovi)
 }
 
 // Pomoćna funkcija koja provjerava nalazi li se miš na '1 PLAYER' MENU izboru.
@@ -384,67 +413,109 @@ void draw() {
   // INTRO
   // ------------------------------------------------------------
   if (state == State.INTRO) {
+    // pushStyle() i popStyle() za očuvanje trenutnog stila i naknadno vraćanje istog
     pushStyle();
-    background(menuBackground);
+    background(menuBackground); // Postavi pozadinu
     imageMode(CENTER);
-    image(introRedBall, windowWidth/2, windowHeight/2);
-    if(currentBubbleY > bubbleY) {
-      currentBubbleY -= 5;
+    image(introRedBall, windowWidth/2, windowHeight/2); // Postavi crvenu kuglu
+    
+    //--------Animacija teksta BUBBLE--------
+    // Sve dok ne dođe do željene pozicije i dok lik nema pištolj, pomiči se gore
+    if (currentBubbleY > bubbleY && !isGunPlaced) {
+      currentBubbleY -= 5; // Pomak od 5px u svakom frameu
       image(bubble, bubbleX, currentBubbleY);
     }
-    else {
+    // Inače, ako je tekst došao na željeno mjesto i lik nema pištolj, neka ostane gdje je i postavi isBubblePlaced na true
+    else if (currentBubbleY <= bubbleY && !isGunPlaced){ // završna pozicija teksta BUBBLE
       image(bubble, bubbleX, bubbleY);
       isBubblePlaced = true;
     }
-    if(isBubblePlaced && currentTroubleY > troubleY) {
-       currentTroubleY -= 5;
+    // Inače ako lik ima pištolj
+    else if (isGunPlaced) {
+      // Sve dok tekst bubble nije izašao van prozora, nek se pomiče dolje
+      if (currentBubbleY <= windowHeight + bubble.height/2) {
+        currentBubbleY += 5; // Pomak od 5px u svakom frameu
+        image(bubble, bubbleX, currentBubbleY);
+      }
+      else { // Kad izađe van prozora, nestao je pa postavljamo isBubbleGone na true
+        image(bubble, bubbleX, windowHeight + bubble.height/2);
+        isBubbleGone = true;
+      }
+    }
+      
+    //--------Animacija teksta TROUBLE--------
+    // Nakon što je bubble postavljen, sve dok ne dođe do željene pozicije i dok lik nema pištolj, pomiči se gore
+    if (isBubblePlaced && currentTroubleY > troubleY && !isGunPlaced) {
+       currentTroubleY -= 5; // Pomak od 5px u svakom frameu
       image(trouble, troubleX, currentTroubleY);
     }
-    else if(isBubblePlaced) {
+    // Inače, ako je tekst došao na željeno mjesto i bubble je na mjestu i još nije nestao, neka ostane gdje je i postavi isTroublePlaced na true
+    else if (isBubblePlaced && currentTroubleY <= troubleY && !isBubbleGone) { // Završna pozicija teksta TROUBLE
       image(trouble, 2*windowWidth/3, windowHeight/2 + bubble.height);
+      isTroublePlaced = true;
+    } 
+    // Inače ako lik ima pištolj i bubble je već nestao
+    else if (isGunPlaced && isBubbleGone) {
+      // Sve dok tekst trouble nije izašao van prozora, nek se pomiče dolje
+      if (currentTroubleY <= windowHeight + trouble.height/2) {
+        currentTroubleY += 5; // Pomak od 5px u svakom frameu
+        image(trouble, troubleX, currentTroubleY);
+      }
+      else { // Kad izađe van prozora, nestao je pa postavljamo isTroubleGone na true
+        image(trouble, troubleX, windowHeight + trouble.height/2);
+        isTroubleGone = true;
+      }
     }
-    image(quitCharacter, windowWidth/5, windowHeight/3);
-    image(redLayer, windowWidth/2, windowHeight/2);
+
+    // Animacija lika
+    if (!isTroublePlaced) { // Postavi običnog lika
+      image(quitCharacter, windowWidth/5, windowHeight/3);
+    }
+    else if (isTroubleGone) {
+      image(quitCharacter, windowWidth/5, windowHeight/3);
+      setIntroCoordinates();
+    }
+    else{ // Kad su tekstualne animacije gotove, postavi lika s puškom (pomaknut zbog duljine puške)
+      image(onePlayerCharacter, windowWidth/4, windowHeight/3);
+      isGunPlaced = true;
+    }
+  
+    image(redLayer, windowWidth/2, windowHeight/2); // Postavi sloj crvene boje
     imageMode(CORNER);
-    image(arrow, windowWidth - arrow.width, windowHeight - arrow.height);
+    image(arrow, windowWidth - arrow.width, windowHeight - arrow.height); // Postavi gumb strelicu za prelazak na MAINMENU
     popStyle();
   }
-  
   
   
   // ------------------------------------------------------------
   // MAINMENU
   // ------------------------------------------------------------
   if (state == State.MAINMENU) {   
-    // pushStyle() i popStyle() za očuvanje trenutnog stila i naknadno vraćanje istog
     pushStyle();
-    background(menuBackground);
-         
-    // Dodavanje lika, crvene kugle i baklji
+    background(menuBackground); // Postavi pozadinu       
     imageMode(CENTER);
-    //image(character, 2*windowWidth/3, windowHeight/2);
-    image(redBall, windowWidth/4, windowHeight/4);
+    image(redBall, windowWidth/4, windowHeight/4); // Postavi crvenu kuglu
 
-    if(frameCount % 8 == 0) {
+    // Animacija baklje (treperenje vatre)
+    if(frameCount % 8 == 0) { // Ako je frameCount djeljiv s 8, crtaj 'fire' sliku
       image(fire, windowWidth/11 , windowHeight/2);
       image(fire, windowWidth/2.46, windowHeight/2);
     }
-    else {
+    else { // Inače crtaj 'torch' sliku
       image(torch, windowWidth/11 , windowHeight/2);
       image(torch, windowWidth/2.46, windowHeight/2);
     }
     
-    //Dodavanje gumba za gašenje zvukova
+    // Dodavanje gumba za gašenje zvukova
     if(soundOn){
       image(soundOnImg, windowWidth-80, 40);
     } else {
       image(soundOffImg, windowWidth-80, 40);
-    }
-   
+    }  
     
     // Dodavanje i rotacija slike bubbleTrouble (tekst)
-    pushMatrix();
-    rotate(radians(-15));
+    pushMatrix(); // Za očuvanje stanja (koordinatnog sustava)
+    rotate(radians(-15)); // Rotiramo samo 'lokalno'
     image(bubbleTrouble, windowWidth/5, windowHeight/3);
     popMatrix();
     
@@ -476,11 +547,11 @@ void draw() {
       
       update(mouseX, mouseY);       
 
-      // Mijenjanje boje pozadine trenutno odabranog polja
+      // Mijenjanje boje pozadine trenutno odabranog polja te lika na pozadini ovisno o odabranom polju
       // Prvo polje - 1 PLAYER
       if (i < fieldHeight) {
         if (menuPick == MenuPick.ONEPLAYER) {
-          image(onePlayerCharacter, 3*windowWidth/4 - 42, windowHeight/2);
+          image(onePlayerCharacter, 3*windowWidth/4 - 42, windowHeight/2); 
           fill(221, 117, 87);
           rect(rectX, rectY - totalHeight/2 + i, rectX - 20, fieldHeight);
         }
@@ -522,10 +593,13 @@ void draw() {
       i += fieldHeight;
     }
     popStyle();
+    
+    // Nacrtaj zidove koji se pomiču preko svega nacrtanog (to će se vidjeti na početku stanja MAINMENU)
     drawTransition();
-    // Pritisak gumba Enter
+    
+    //-------------Pritisak gumba Enter-------------
     if (isEnter) {
-      resetTransition();
+      resetTransition(); // Prilikom odabira nekog polja, resetiraj tranziciju (postavi koordinate na početne)
       if(soundOn){
         switchSound.play();
       } 
@@ -541,11 +615,11 @@ void draw() {
       else exit();
     }
     
-    // Pritisak strelice dolje
+    //-------------Pritisak strelice dolje-------------
     if (isDown) {
       if (menuPick == MenuPick.ONEPLAYER) {
         if(soundOn)
-          twoPlayersSound.play();
+          twoPlayersSound.play(); // Promjena odabira daje zvuk ovisno o odabiru
         menuPick = MenuPick.TWOPLAYERS;
         isDown = false; //inace propada, tj. ulazi u sve uvjete redom
       }
@@ -567,7 +641,7 @@ void draw() {
       }
     }
     
-    // Pritisak strelice gore
+    //-------------Pritisak strelice gore-------------
     if (isUp) {
       if (menuPick == MenuPick.ONEPLAYER) {
         menuPick = MenuPick.QUIT;
@@ -600,12 +674,12 @@ void draw() {
   // INSTRUCTIONS
   // ------------------------------------------------------------
   else if (state == State.INSTRUCTIONS) {
-    background(instructions);
+    background(instructions); // Postavi pozadinu
     pushStyle();
     imageMode(CENTER);   
-    image(menuButton, windowWidth/2, 5*windowHeight/6);
+    image(menuButton, windowWidth/2, 5*windowHeight/6); // Postavi gumb za povratak u MAINMENU
     popStyle();    
-    drawTransition();
+    drawTransition(); // Ulaskom u INSTRUCTIONS vidimo zidove koji se pomiču
   } 
   // ------------------------------------------------------------
   // GAME
@@ -735,7 +809,6 @@ void draw() {
     strokeWeight(1);
    
     drawTransition(); // Crtanje zidova koji se pomiču
-    // dodati neki delay igre?
     
     // Crtanje supermoći koje padaju ili nisu pokupljene.
     if(activeSuperpower != ""){
@@ -1078,7 +1151,7 @@ void mousePressed(){
       else if(players.size() == 2) play_game(2);
   }
   
-  //provjera je li korisnik kliknuo na gumb meni u State.RESULTS
+  // Provjera je li korisnik kliknuo na gumb meni u State.RESULTS
   if( mouseX >= (windowWidth/2 - menuButton.width/2) && mouseX <= (windowWidth/2 + menuButton.width/2) && mouseY>= (windowHeight - menuButton.height - 50) && mouseY<= (windowHeight - 50) && state == State.RESULTS) {
      if(soundOn)
        switchSound.play();
