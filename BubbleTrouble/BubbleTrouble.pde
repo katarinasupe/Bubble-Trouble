@@ -310,7 +310,7 @@ void drawTransition() {
 }
 
 // Funkcija za resetiranje tranzicije
-void reset_transition() {
+void resetTransition() {
   bottomWallHeight = windowHeight/2 - transitionFactor;
   topWallHeight = transitionFactor;
   totalMoveCtr = 0;  
@@ -325,10 +325,10 @@ void play_game(int _quantity){
 }
 
 // Vraćanje u glavni izbornik tako da odabir bude defaultan te se zvuk pokrene
-void reset_game() {
+void resetGame() {
   state = State.MAINMENU;
   menuPick = MenuPick.ONEPLAYER;
-  reset_transition();
+  resetTransition();
   if(soundOn) 
     introSong.loop();
 }
@@ -528,7 +528,7 @@ void draw() {
     drawTransition();
     // Pritisak gumba Enter
     if (isEnter) {
-      reset_transition();
+      resetTransition();
       if(soundOn){
         introSong.stop();
         switchSound.play();
@@ -850,7 +850,7 @@ void draw() {
     // Ako je igra gotova ili ako je zadnji level
     if(is_game_over || game_completed) {
       for (Player player : players) player.overall_points += player.level_points;
-      reset_transition();
+      resetTransition();
       if(soundOn) {
         switchSound.play();
       }
@@ -859,7 +859,7 @@ void draw() {
     
    /* // Ako je zadnji level pobjeđen ispisuje se čestitka.
     if(game_completed){
-      reset_transition();
+      resetTransition();
       if(soundOn)
         switchSound.play();
       state = State.RESULTS;
@@ -999,7 +999,7 @@ void mousePressed(){
   if(state == State.MAINMENU){
     // 1 player
     if(overOnePlayer(mouseX, mouseY)){
-        reset_transition();
+        resetTransition();
         if(soundOn){
           introSong.stop();
           switchSound.play();
@@ -1008,7 +1008,7 @@ void mousePressed(){
     }
     // 2 players
     if(overTwoPlayers(mouseX, mouseY)){
-        reset_transition();
+        resetTransition();
         if(soundOn){
           introSong.stop();
           switchSound.play();
@@ -1017,7 +1017,7 @@ void mousePressed(){
     }
     // controls
     if(overControls(mouseX, mouseY)){
-        reset_transition();
+        resetTransition();
         if(soundOn){
           introSong.stop();
           switchSound.play();
@@ -1026,7 +1026,7 @@ void mousePressed(){
     }
     // quit
     if(overQuit(mouseX, mouseY)){
-        reset_transition();
+        resetTransition();
         if(soundOn){
           introSong.stop();
           switchSound.play();
@@ -1049,7 +1049,7 @@ void mousePressed(){
   }
   
   if((mouseX >= (windowWidth/2 - 80))  && (mouseX <= (windowWidth/2 + 80)) && (mouseY >= (5*windowHeight/6 - 45)) && (mouseY <= (5*windowHeight/6 + 45)) && state == State.INSTRUCTIONS) {
-    reset_game();
+    resetGame();
   }
   
   // Provjera je li korisnik kliknuo pauzu.
@@ -1066,7 +1066,7 @@ void mousePressed(){
     else if(mouseX >= (windowWidth/2 - 450/2) && mouseX <= (windowWidth/2 + 450/2) && mouseY >= (windowHeight/2 + 10) && mouseY <= (windowHeight/2 + 90)){
       if(soundOn)
         switchSound.play();
-      reset_game();    
+      resetGame();    
     }    
   }
   
@@ -1074,7 +1074,7 @@ void mousePressed(){
   if( mouseX >= (windowWidth/2 - menuButton.width/2) && mouseX <= (windowWidth/2 + menuButton.width/2) && mouseY>= (windowHeight - menuButton.height - 50) && mouseY<= (windowHeight - 50) && state == State.RESULTS) {
      if(soundOn)
        switchSound.play();
-     reset_game();
+     resetGame();
   }
   
   // Provjera je li korisnik kliknuo na gumb strelica u State.INTRO
