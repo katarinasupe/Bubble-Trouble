@@ -10,6 +10,8 @@ int quantity;
 ArrayList<Player> players = new ArrayList<Player>();
 // Lista u kojoj se čuvaju sve lopte trenutno na ekranu.
 ArrayList<Ball> balls = new ArrayList<Ball>();
+// Niz koji čuva supermoći trenutnog levela.
+String[] superpowers;
 // Varijabla koja pohranjuje istinu ako je igra gotova, inače laž
 boolean is_game_over = false;
 // Varijabla koja pamti je li u tijeku čekanje ponovnog početka igre.
@@ -55,6 +57,8 @@ PImage spearImg;
 PImage levelImg;
 // Slika za 'pauza' gumb.
 PImage pauseImg;
+// Slika za restart gumb.
+PImage restartImg;
 // Slika bodlji na vrhu ekrana.
 PImage thornsImg;
 
@@ -103,6 +107,13 @@ boolean getSound() {
 
 boolean lostLife = false;
 
+// supermoći (štit, život)
+String activeSuperpower = "";
+PImage activeSuperpowerImg;
+float xSuperpowerPosition, ySuperpowerPosition;
+int superpowerHeight = 25, superpowerWidth = 25;
+int superpower_millisecs;
+
 void setup() {
   
   size(1280, 720);
@@ -113,6 +124,7 @@ void setup() {
   lostLife = true;
   balls.clear();
   balls = (ArrayList<Ball>)level.balls.clone();
+  superpowers = level.superpowers;
   // Pamtimo vrijeme početka radi kasnijeg računanja bodova:
   minutes = minute();
   seconds = second();
@@ -149,6 +161,7 @@ void setup() {
   
   // učitavanje slike za pauzu u GAME
   pauseImg = loadImage("pause.png");
+  restartImg = loadImage("restart.png");
   
   path = sketchPath("");
   path = path + "\\sounds\\";
@@ -572,6 +585,9 @@ void draw() {
     
     // Crtanje gumba za pauzu.
     image(pauseImg, windowWidth-100, 25);
+    
+    // Crtanje gumba za restartanje igre.
+    image(restartImg, windowWidth-55, 25);
   
     // Nacrtaj igrače i lopte.
     for (Player player: players)
@@ -665,8 +681,30 @@ void draw() {
     strokeWeight(1);
    
     draw_transition(); // Crtanje zidova koji se pomiču
-     
     // dodati neki delay igre?
+    
+    // Crtanje supermoći koje padaju ili nisu pokupljene.
+    if(activeSuperpower != ""){
+      //supermoć je u zraku
+      if((int)ySuperpowerPosition != gameHeight-superpowerHeight){
+        ySuperpowerPosition += 1;     
+        image(activeSuperpowerImg, xSuperpowerPosition-(superpowerWidth/2), ySuperpowerPosition, superpowerWidth, superpowerHeight);
+        // pamti vrijeme kad je supermoć dotaknula pod
+        superpower_millisecs = millis();
+      }
+      else{
+        // Vrijeme za koje igrač može pokupiti supermoć s poda.
+        if(millis() - superpower_millisecs <= 3000){
+          image(activeSuperpowerImg, xSuperpowerPosition-(superpowerWidth/2), gameHeight-superpowerHeight, superpowerWidth, superpowerHeight);
+        }
+        else
+          activeSuperpower = "";        
+      }
+      
+      // Provjera je li igrač pokupio supermoć.
+      superpowerPlayerCollision();      
+    }     
+    
     // Ako je igrač izgubio život, ali još uvijek ima preostale živote:
     if(lostLife && !is_game_over) {
       // Pišemo prikladni tekst za kratak period vremena:
@@ -680,11 +718,16 @@ void draw() {
           player_.resetOrientation();
           player_.resetState();
         }
+        // Ponovno postavljamo level.
+        level = new Level(current_level);
         // Ponovno postavljamo kugle.
         balls.clear();
-        balls = new Level(current_level).balls;
+        balls = level.balls;
+        superpowers = level.superpowers;
         // Ponovno postavljamo bodove
         for (Player player : players) player.level_points = 0;
+        // Deaktiviramo moć ako je bila aktivna.
+        activeSuperpower = "";
         // Ponovno pokrećemo vrijeme:
         millis = millis();
         // Naznačimo da je sad trenutak kad se igrač treba spremati za ponovni početak igre.
@@ -728,9 +771,13 @@ void draw() {
             player_.resetOrientation();
             player_.resetState();
           }
+          // Ponovno postavljamo level.
+          level = new Level(current_level);     
           // Ponovno postavljamo kugle.
           balls.clear();
-          balls = new Level(current_level).balls;
+          balls = level.balls;
+          // Ponovno postavljamo supermoći. 
+          superpowers = level.superpowers;
           // Ponovno postavljamo bodove
           for (Player player : players) player.level_points = 0;
           // Ponovno pokrećemo vrijeme:
@@ -783,7 +830,7 @@ void draw() {
         restart_the_balls();
         millis = millis();
       }        
-    }  
+    }
     }
     // ------------------------------------------------------------
     // PAUSE
@@ -1096,6 +1143,9 @@ void levelWon() {
   if(soundOn)
     levelDoneSound.play();
     
+  //Deaktiviramo aktivnu moć ako je bilo.
+  activeSuperpower = "";
+    
   // Ponovno postavimo pozicije igrača.
   for (Player player_: players){
     player_.resetPosition();
@@ -1103,18 +1153,55 @@ void levelWon() {
     player_.resetState();    
   }
   
-  // Postavljamo kugle za odgovarajući level.
+  // Postavljamo kugle i supermoći za odgovarajući level.
   if(current_level < 5){
     level = new Level(++current_level);
     String levelImgName = "level" + str(current_level) + ".png";
     levelImg = loadImage(levelImgName);
     balls = level.balls;
+    superpowers = level.superpowers;
   }
   else if(current_level == 5){
     game_completed = true;
   }  
   
   pause_game();
+}
+
+// Funkcija koja aktivira supermoć ako već nije aktivirana neka druga i vraća informaciju o uspješnom/neuspješnom aktiviranju.
+boolean superpowerSpearCollision(String _superpower, float x, float y, Player _player){
+  if (activeSuperpower != "")
+    return false;
+    
+  // Igrač može imati najviše 9 života.
+  if(_superpower == "life" && _player.lives == 9)
+    return false;
+    
+  activeSuperpower = _superpower;
+  activeSuperpowerImg = loadImage(activeSuperpower + ".png");
+  xSuperpowerPosition = x;
+  ySuperpowerPosition = y;    
+  return true;
+}
+
+// Funkcija za detekciju kolizije supermoći i igrača.
+void superpowerPlayerCollision(){
+  // Za svakog igrača (prva for petlja) gledamo dolazi li do kolizije i potom postupamo prikladno.
+  for (Player player : players) {    
+    if(player.checkSuperpowerCollision(xSuperpowerPosition, ySuperpowerPosition)){
+      switch(activeSuperpower){        
+        case "shield": 
+          player.state = PlayerState.SHIELD;
+          activeSuperpower = "";
+          return;
+        
+        case "life":
+          ++player.lives;
+          activeSuperpower = "";
+          return;      
+      }  
+    }
+  }
 }
 
 // Funkcija za detekciju kolizije lopti i koplja.
@@ -1124,9 +1211,16 @@ void ballSpearCollision() {
   for (Player player : players) {
     for (int i = balls.size() - 1; i >= 0; --i)
       if (balls.get(i).checkSpearCollision(player.xSpear, player.ySpear)) {
+
+        // Ako je igrač udario lopticu određene veličine (prvu takvu) u kojoj se nalazi supermoć (ovisno o levelu) aktivira se supermoć.
+        if(balls.get(i).sizeLevel > 1 && superpowers[balls.get(i).sizeLevel - 2] != ""){
+            if(superpowerSpearCollision(superpowers[balls.get(i).sizeLevel - 2], balls.get(i).xCenter, balls.get(i).yCenter, player))
+              superpowers[balls.get(i).sizeLevel - 2] = "";  //ako je bila aktivirana, supermoć je iskorištena
+        }
+          
         splitBall(i, player, false);
-        player.resetSpear();
-      }
+        player.resetSpear();                
+   }
     //-------------------------
     // STARI KOD (za svaki slučaj). Sve unutar petlje je prebačeno u funkciju splitBall(), ali može se vratiti za 
     // slučaj da nešto ne radi kako treba. Petlja (gore) je napisana tako da ide unatrag
@@ -1180,38 +1274,53 @@ void ballPlayerCollision() {
     if(player.lives <= 0) continue;
     for (int i = 0; i < balls.size(); ++i) {
       Ball current = balls.get(i);
-      if (current.checkPlayerCollision(player.position)) {
-        if (!current.is_being_hit) {
-          --player.lives;
-          if(soundOn) {
-            player.stopSpearSound();
-            punchSound.play();
+      if (current.checkPlayerCollision(player.position)) {      
+        if(player.state == PlayerState.SHIELD){
+          
+          if(current.sizeLevel == 1)
+            balls.remove(i);
+          else
+            splitBall(i, player, false);
+          
+          player.state = PlayerState.REGULAR;
+            if (balls.isEmpty()){
+              levelWon_millisecs = millis();
+              levelWon();
+            }
+        }        
+        else{          
+          if (!current.is_being_hit) {
+            --player.lives;
+            if(soundOn) {
+              player.stopSpearSound();
+              punchSound.play();
+            }
+            // Ako je kolizija tek počela, postavljamo atribut na true.
+            // Ovime izbjegavao da se odjednom oduzme nekoliko života umjesto jednog.
+            current.is_being_hit = true;
+            player.resetSpear(); //maknemo i strelice od tog igrača
+            delay_millisecs = millis();
+            pause_game();
+            lostLife = true;
+            temp_millisecs = millis();          
+            player.just_lost_life = true;
           }
-          // Ako je kolizija tek počela, postavljamo atribut na true.
-          // Ovime izbjegavao da se odjednom oduzme nekoliko života umjesto jednog.
-          current.is_being_hit = true;
-          player.resetSpear(); //maknemo i strelice od tog igrača
-          delay_millisecs = millis();
-          pause_game();
-          lostLife = true;
-          temp_millisecs = millis();          
-          player.just_lost_life = true;
+          // Varijabla kojom brojimo koliko igrača je izgubilo:
+          int no_of_over = 0;
+          for (Player player_: players)
+            if (player_.lives <= 0) no_of_over += 1;
+          // Ako su svi igrači izgubili igru, idemo na game_over:
+          if (no_of_over == players.size()) {
+            // Mali trik: smanjujemo broj života zadnjeg igrača na -1,
+            // kako bismo ga ipak mogli crtati u sudaru s lopticom pri potpunom gubitku igre. 
+            --player.lives;
+            game_over();
+            return;
+          }
+  
+          // Ali, ako jedan igrač izgubi, drugi još ostaje!
+          if (player.lives <= 0) no_of_over += 1;
         }
-        // Varijabla kojom brojimo koliko igrača je izgubilo:
-        int no_of_over = 0;
-        for (Player player_: players)
-          if (player_.lives <= 0) no_of_over += 1;
-        // Ako su svi igrači izgubili igru, idemo na game_over:
-        if (no_of_over == players.size()) {
-          // Mali trik: smanjujemo broj života zadnjeg igrača na -1,
-          // kako bismo ga ipak mogli crtati u sudaru s lopticom pri potpunom gubitku igre. 
-          --player.lives;
-          game_over();
-          return;
-        }
-
-        // Ali, ako jedan igrač izgubi, drugi još ostaje!
-        if (player.lives <= 0) no_of_over += 1;
       }
       else current.is_being_hit = false; // Ako kolizije više nema, postavljamo atribut na false.
     }

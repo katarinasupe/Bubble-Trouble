@@ -120,6 +120,17 @@ class Player {
     
     fill(255);
   }
+  
+  // Provjera kolizije sa supermoći (pravokutnik).
+  boolean checkSuperpowerCollision(float r2x, float r2y) {
+
+    if ((position + playerImgWidth/2 - 5) + 10 >= r2x &&
+        (position - playerImgWidth/2 + 5) + 9 <= r2x + superpowerWidth &&
+        gameHeight - playerImgHeight <= r2y + superpowerHeight) {
+          return true;
+      }
+      return false;
+  }
 
   void move(float x) {
     position += x;
