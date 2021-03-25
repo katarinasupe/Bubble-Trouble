@@ -1,5 +1,4 @@
- //<>//
-import processing.sound.*;
+import processing.sound.*; //<>//
 
 // Veličina okvira za igru.
 final float gameWidth = 1024, gameHeight = 576;
@@ -38,6 +37,7 @@ PImage fire;
 PImage level1;
 PFont menuFont;
 PFont gameFont;
+PImage introRedBall, arrow, redLayer;
 
 
 float transitionFactor = 5; // Za koliko se piksela zid pomiče svaki frame
@@ -68,14 +68,15 @@ final int ENTER_CODE = 10; // Moze biti problema s ovim
 // Moguća stanja programa. Ovisno o varijabli state, u draw()
 // se iscrtavaju različiti prozori.
 enum State {
+    INTRO,
     MAINMENU, 
     INSTRUCTIONS, 
     GAME,
     PAUSE,
     RESULTS
 }
-// Na početku igre vidimo stanje MAINMENU
-State state = State.MAINMENU; 
+// Na početku igre vidimo stanje INTRO
+State state = State.INTRO; 
 
 //Mogući odabiri u meniju  
 enum MenuPick {
@@ -132,7 +133,7 @@ void setup() {
   paused_millisecs = 0;
   pause_game();
   
-  //učitavanje slika za MAINMENU
+  // učitavanje slika za MAINMENU
   onePlayerCharacter = loadImage("onePlayerCharacter.png");
   twoPlayersCharacter = loadImage("twoPlayersCharacter.png");
   controlsCharacter = loadImage("controlsCharacter.png"); 
@@ -152,6 +153,10 @@ void setup() {
   topWall = loadImage("topWall.png");
   bottomWall = loadImage("bottomWall.png");
   fire = loadImage("fire.png");
+  // učitavanje slika za INTRO
+  introRedBall = loadImage("introRedBall.png");
+  redLayer = loadImage("redLayer.png");
+  arrow = loadImage("arrow.png");
   
   //učitavanje fonta za MAINMENU
   menuFont = loadFont("GoudyStout-28.vlw");
@@ -362,6 +367,23 @@ void update(int x, int y){
 
 void draw() { 
   // ------------------------------------------------------------
+  // INTRO
+  // ------------------------------------------------------------
+  if (state == State.INTRO) {
+    pushStyle();
+    background(menuBackground);
+    imageMode(CENTER);
+    image(introRedBall, windowWidth/2, windowHeight/2);
+    image(quitCharacter, windowWidth/5, windowHeight/3);
+    image(redLayer, windowWidth/2, windowHeight/2);
+    imageMode(CORNER);
+    image(arrow, windowWidth - arrow.width, windowHeight - arrow.height);
+    popStyle();
+  }
+  
+  
+  
+  // ------------------------------------------------------------
   // MAINMENU
   // ------------------------------------------------------------
   if (state == State.MAINMENU) {   
@@ -471,7 +493,6 @@ void draw() {
       i += fieldHeight;
     }
     popStyle();
-        
     draw_transition();
     // Pritisak gumba Enter
     if (isEnter) {
@@ -1017,11 +1038,16 @@ void mousePressed(){
     }    
   }
   
-  //provjera je li korisnik kliknuo na gumb meni u State.RESULT
-  if( mouseX >= (windowWidth/2 - menuButton.width/2) && mouseX <= (windowWidth/2 + menuButton.width/2) && mouseY>= (windowHeight - menuButton.height - 50) && mouseY<= (windowHeight - 50)) {
+  //provjera je li korisnik kliknuo na gumb meni u State.RESULTS
+  if( mouseX >= (windowWidth/2 - menuButton.width/2) && mouseX <= (windowWidth/2 + menuButton.width/2) && mouseY>= (windowHeight - menuButton.height - 50) && mouseY<= (windowHeight - 50) && state == State.RESULTS) {
      if(soundOn)
        switchSound.play();
      reset_game();
+  }
+  
+  // Provjera je li korisnik kliknuo na gumb strelica u State.INTRO
+  if( (mouseX >= (windowWidth - arrow.width)) && (mouseX <= windowWidth) && (mouseY >= windowHeight - arrow.height) && (mouseY <= windowHeight) && (state == State.INTRO) ) {
+    state = State.MAINMENU;
   }
 }
 
