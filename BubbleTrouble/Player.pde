@@ -5,7 +5,7 @@ import processing.sound.*;
 // Zadana visina sličice igrača. Na temelju nje i veličine
 // originalne slike se računa širina playerImgWidth sličice u 
 // Player.draw().
-final float playerImgHeight = 65;
+float playerImgHeight;
 float playerImgWidth;
 
 // Zadana širina i visina sličice koplja.
@@ -62,6 +62,8 @@ class Player {
     ySpear = gameHeight; // Na dnu prozora s igrom.
     no_player = number;
     
+    playerImgHeight = 65;
+    
     this.orientation = PlayerOrientation.BACK;
     this.state = PlayerState.REGULAR;
   }
@@ -92,9 +94,11 @@ class Player {
     int type = 0;
     switch(state){
       case REGULAR :
+        playerImgHeight = 65;
         type = 0; 
         break;
-      case SHIELD : //kad uvedemo supermoći
+      case SHIELD :
+        playerImgHeight = 75;
         type = 3;
         break;
     }
@@ -164,11 +168,11 @@ class Player {
   
   // ----------------------------------------------------------
   // Provjera kolizije sa supermoći (pravokutnik).
-  boolean checkSuperpowerCollision(float r2x, float r2y) {
+  boolean checkSuperpowerCollision(float xSuperpowerPosition, float ySuperpowerPosition) {
 
-    if ((position + playerImgWidth/2 - 5) + 10 >= r2x &&
-        (position - playerImgWidth/2 + 5) + 9 <= r2x + superpowerWidth &&
-        gameHeight - playerImgHeight <= r2y + superpowerHeight) {
+    if (position + playerImgWidth/2 + 5 >= xSuperpowerPosition &&
+        position - playerImgWidth/2 + 14 <= xSuperpowerPosition + superpowerWidth &&
+        gameHeight - playerImgHeight <= ySuperpowerPosition + superpowerHeight) {
           return true;
       }
       return false;

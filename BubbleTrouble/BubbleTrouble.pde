@@ -394,7 +394,7 @@ boolean overQuit(int x, int y){
 
 // Funkcija ažurira (ako je) na kojem je od 4 MENU izbora miš trenutno.
 // Inače ostaje na izboru odabranom strelicama.
-void update(int x, int y){
+void mouseUpdate(int x, int y){
   if(overOnePlayer(x, y)){
     menuPick = MenuPick.ONEPLAYER;
   }
@@ -546,7 +546,7 @@ void draw() {
       textAlign(CENTER, CENTER);
       textFont(menuFont);
       
-      update(mouseX, mouseY);       
+      mouseUpdate(mouseX, mouseY);       
 
       // Mijenjanje boje pozadine trenutno odabranog polja te lika na pozadini ovisno o odabranom polju
       // Prvo polje - 1 PLAYER
@@ -813,8 +813,14 @@ void draw() {
     
     // Crtanje supermoći koje padaju ili nisu pokupljene.
     if(activeSuperpower != ""){
+      // loptica udarena ispod razine na kojoj treba biti supermoć na podu 
+      if((int)ySuperpowerPosition > gameHeight-superpowerHeight){
+        println(ySuperpowerPosition);
+        image(activeSuperpowerImg, xSuperpowerPosition-(superpowerWidth/2), gameHeight-superpowerHeight, superpowerWidth, superpowerHeight);
+        superpower_millisecs = millis();
+      }
       //supermoć je u zraku
-      if((int)ySuperpowerPosition != gameHeight-superpowerHeight){
+      else if((int)ySuperpowerPosition < gameHeight-superpowerHeight){
         ySuperpowerPosition += 1;     
         image(activeSuperpowerImg, xSuperpowerPosition-(superpowerWidth/2), ySuperpowerPosition, superpowerWidth, superpowerHeight);
         // pamti vrijeme kad je supermoć dotaknula pod
@@ -822,7 +828,7 @@ void draw() {
       }
       else{
         // Vrijeme za koje igrač može pokupiti supermoć s poda.
-        if(millis() - superpower_millisecs <= 3000){
+        if(millis() - superpower_millisecs - paused_millisecs <= 3000){ // u pravoj igri bez - paused_millisecs
           image(activeSuperpowerImg, xSuperpowerPosition-(superpowerWidth/2), gameHeight-superpowerHeight, superpowerWidth, superpowerHeight);
         }
         else
@@ -973,7 +979,7 @@ void draw() {
     // ------------------------------------------------------------
     // PAUSE
     // ------------------------------------------------------------
-    else if (state == State.PAUSE) {
+    else if (state == State.PAUSE) {      
         unsetMoves(); // Za svaki slučaj deaktiviramo tipke.
         textAlign(CENTER, CENTER);      
         stroke(183, 180, 16);
@@ -982,17 +988,30 @@ void draw() {
         int _width = 450;
         float rectX = windowWidth/2;
         float rectY = windowHeight/2;
-        rect(rectX-_width/2, rectY-80-20, _width, 80);
-        rect(rectX-_width/2, rectY+10, _width, 80);
+        rect(rectX-_width/2, rectY-80-10-10, _width, 152);
         fill(224, 0, 0);
         rectX = windowWidth/2-_width/2+8;
         rectY = windowHeight/2-92;
-        rect(windowWidth/2-_width/2+8, windowHeight/2-92, _width-16, 64);
-        rect(windowWidth/2-_width/2+8, windowHeight/2+18, _width-16, 64);
+        
+        if(mouseX >= (windowWidth/2 - 450/2 + 8) && mouseX <= (windowWidth/2 - 450/2 + 8 + 450 - 16) && mouseY >= (windowHeight/2 - 92) && mouseY <= (windowHeight/2 - 92 + 64)){
+          fill(221, 117, 87);
+          rect(windowWidth/2-_width/2+8, windowHeight/2-92, _width-16, 64);
+        }
+        else
+          rect(windowWidth/2-_width/2+8, windowHeight/2-92, _width-16, 64);
+        
+        fill(224, 0, 0);          
+        if(mouseX >= (windowWidth/2 - 450/2 + 8) && mouseX <= (windowWidth/2 - 450/2 + 8 + 450 - 16) && mouseY >= (windowHeight/2 - 20) && mouseY <= (windowHeight/2 - 20 + 64)){
+          fill(221, 117, 87);
+          rect(windowWidth/2-450/2+8, windowHeight/2-20, 450-16, 64);
+        }
+        else       
+          rect(windowWidth/2-_width/2+8, windowHeight/2-20, _width-16, 64);
+          
         fill(255, 245, 0);
         textSize(25);
         text("resume", windowWidth/2, windowHeight/2-60);
-        text("main menu", windowWidth/2, windowHeight/2+50);
+        text("main menu", windowWidth/2, windowHeight/2+12);
         fill(255);
         stroke(0);
         strokeWeight(1);
@@ -1131,12 +1150,13 @@ void mousePressed(){
     state = State.PAUSE;
   }
   
+  // Provjera je li korisnik kliknuo RESUME ili MAIN MENU dok je igra pauzirana.
   if(state == State.PAUSE){
-    if((mouseX >= (windowWidth/2 - 450/2) && mouseX <= (windowWidth/2 + 450/2)) && mouseY >= (windowHeight/2 - 100) && mouseY <= (windowHeight/2 - 20)){
+    if(mouseX >= (windowWidth/2 - 450/2 + 8) && mouseX <= (windowWidth/2 - 450/2 + 8 + 450 - 16) && mouseY >= (windowHeight/2-92) && mouseY <= (windowHeight/2 - 92 + 64)){
       paused_millisecs += millis() - temp_millisecs;
       state = State.GAME;
     }
-    else if(mouseX >= (windowWidth/2 - 450/2) && mouseX <= (windowWidth/2 + 450/2) && mouseY >= (windowHeight/2 + 10) && mouseY <= (windowHeight/2 + 90)){
+    else if(mouseX >= (windowWidth/2 - 450/2 + 8) && mouseX <= (windowWidth/2 - 450/2 + 8 + 450 - 16) && mouseY >= (windowHeight/2 - 20) && mouseY <= (windowHeight/2 - 20 + 64)){
       if(soundOn)
         switchSound.play();
       resetGame();    
@@ -1347,30 +1367,15 @@ boolean superpowerSpearCollision(String _superpower, float x, float y, Player _p
     return false;
     
   activeSuperpower = _superpower;
-  activeSuperpowerImg = loadImage(activeSuperpower + ".png");
+  
+  try{
+    activeSuperpowerImg = loadImage(activeSuperpower + ".png");
+  } catch (Exception e) {
+    print("Slika ne postoji");
+  }  
   xSuperpowerPosition = x;
   ySuperpowerPosition = y;    
   return true;
-}
-
-// Funkcija za detekciju kolizije supermoći i igrača.
-void superpowerPlayerCollision(){
-  // Za svakog igrača (prva for petlja) gledamo dolazi li do kolizije i potom postupamo prikladno.
-  for (Player player : players) {    
-    if(player.checkSuperpowerCollision(xSuperpowerPosition, ySuperpowerPosition)){
-      switch(activeSuperpower){        
-        case "shield": 
-          player.state = PlayerState.SHIELD;
-          activeSuperpower = "";
-          return;
-        
-        case "life":
-          ++player.lives;
-          activeSuperpower = "";
-          return;      
-      }  
-    }
-  }
 }
 
 // Funkcija koja pauzira igru.
@@ -1470,6 +1475,31 @@ void ballPlayerCollision() {
         }
       }
       else current.is_being_hit = false; // Ako kolizije više nema, postavljamo atribut na false.
+    }
+  }
+}
+
+// Funkcija za detekciju kolizije supermoći i igrača.
+void superpowerPlayerCollision(){
+  // Za svakog igrača (prva for petlja) gledamo dolazi li do kolizije i potom postupamo prikladno.
+  for (Player player : players) {    
+    if(player.checkSuperpowerCollision(xSuperpowerPosition, ySuperpowerPosition)){
+      switch(activeSuperpower){        
+        case "shield": 
+          player.state = PlayerState.SHIELD;
+          activeSuperpower = "";
+          return;
+        
+        case "life":
+          ++player.lives;
+          activeSuperpower = "";
+          return;  
+          
+        case "point":
+          player.level_points += 100 * level.number;
+          activeSuperpower = "";
+          return;
+      }        
     }
   }
 }

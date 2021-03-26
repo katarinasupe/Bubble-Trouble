@@ -11,8 +11,8 @@ class Level{
   float ballXVelocity, ballYVelocity;
   int time;
     
-  Level(int number){
-    switch (number){
+  Level(int _number){
+    switch (_number){
       case 1:
         number = 1;
         // plava
@@ -23,6 +23,8 @@ class Level{
         ballYVelocity = 2;
         
         time = 45000;
+        
+        superpowers[0] = "point";
         
         balls.add(new Ball((windowWidth-gameWidth)/2 + 100, gameHeight/2, 2, ballXVelocity, ballYVelocity, BallColor.YELLOW));   
 
@@ -82,6 +84,7 @@ class Level{
         balls.add(new Ball((windowWidth-gameWidth)/2 + gameWidth - 60, 2*gameHeight/3, 3, ballXVelocity, ballYVelocity, BallColor.YELLOW)); 
 
         superpowers[2] = "shield";
+        superpowers[1] = "point";
         
         return;
       
