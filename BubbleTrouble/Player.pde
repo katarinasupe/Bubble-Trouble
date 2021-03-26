@@ -1,5 +1,7 @@
 import processing.sound.*;
-
+// ------------------------------------------------------------
+// Globalne varijable i enumeracije vezane uz igrača.
+// ------------------------------------------------------------
 // Zadana visina sličice igrača. Na temelju nje i veličine
 // originalne slike se računa širina playerImgWidth sličice u 
 // Player.draw().
@@ -22,7 +24,9 @@ enum PlayerState {
   SHIELD
 }
 
+// ------------------------------------------------------------
 // Klasa koja predstavlja igrača, uključujući koplje.
+// ------------------------------------------------------------
 class Player {
   // Pozicija igrača je određena x-koordinatom sredine sličice.
   float position;
@@ -49,8 +53,10 @@ class Player {
   
   private PlayerOrientation orientation;
   private PlayerState state;
-
-
+  
+  // ----------------------------------------------------------
+  // Metode
+  // ----------------------------------------------------------
   Player(float _position, int number) {
     position = _position;
     ySpear = gameHeight; // Na dnu prozora s igrom.
@@ -59,7 +65,8 @@ class Player {
     this.orientation = PlayerOrientation.BACK;
     this.state = PlayerState.REGULAR;
   }
-
+  
+  // ----------------------------------------------------------
   // Iscrtavanje igrača na ekran.
   void draw() {
     fill(0);
@@ -121,26 +128,13 @@ class Player {
     fill(255);
   }
   
-  // Provjera kolizije sa supermoći (pravokutnik).
-  boolean checkSuperpowerCollision(float r2x, float r2y) {
-
-    if ((position + playerImgWidth/2 - 5) + 10 >= r2x &&
-        (position - playerImgWidth/2 + 5) + 9 <= r2x + superpowerWidth &&
-        gameHeight - playerImgHeight <= r2y + superpowerHeight) {
-          return true;
-      }
-      return false;
-  }
-
-  void move(float x) {
-    position += x;
-  }
-
+  // ----------------------------------------------------------
+  // Resetiranje igračevih atributa.
   void resetPosition() {
     // Pozicija ovisi o kodu igrača i o ukupnom broju igrača:
     position = no_player*windowWidth/(quantity+1);
   }
-
+  
   void resetOrientation() {
     orientation = PlayerOrientation.BACK;
   }
@@ -149,7 +143,8 @@ class Player {
     state = PlayerState.REGULAR;
   }
   
-  // Ažuriraj koplje i sve što treba.
+  // ----------------------------------------------------------
+  // Ažuriranje igračevih atributa.
   void update() {
     if (spearActive) {
       // Koplje je stiglo do ruba ekrana, treba se početi spuštati.
@@ -166,7 +161,21 @@ class Player {
       }
     }
   }
+  
+  // ----------------------------------------------------------
+  // Provjera kolizije sa supermoći (pravokutnik).
+  boolean checkSuperpowerCollision(float r2x, float r2y) {
 
+    if ((position + playerImgWidth/2 - 5) + 10 >= r2x &&
+        (position - playerImgWidth/2 + 5) + 9 <= r2x + superpowerWidth &&
+        gameHeight - playerImgHeight <= r2y + superpowerHeight) {
+          return true;
+      }
+      return false;
+  }
+  
+  // ----------------------------------------------------------
+  // Metode vezane uz koplje.
   void activateSpear() {
     xSpear = position; // Koplje počinje na trenutnoj poziciji igrača.
     spearActive = true;

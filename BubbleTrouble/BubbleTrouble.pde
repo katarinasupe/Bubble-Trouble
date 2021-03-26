@@ -357,6 +357,7 @@ void resetGame() {
   resetTransition(); // tako da se ispravno nacrta iduća tranzicija u MAINMENU
   if(soundOn) 
     switchSound.play(); // tranzicija (zidovi)
+  unsetMoves();
 }
 
 // Pomoćna funkcija koja provjerava nalazi li se miš na '1 PLAYER' MENU izboru.
@@ -408,7 +409,7 @@ void update(int x, int y){
   }
 }
 
-void draw() { 
+void draw() {
   // ------------------------------------------------------------
   // INTRO
   // ------------------------------------------------------------
@@ -972,7 +973,8 @@ void draw() {
     // ------------------------------------------------------------
     // PAUSE
     // ------------------------------------------------------------
-    else if (state == State.PAUSE) {         
+    else if (state == State.PAUSE) {
+        unsetMoves(); // Za svaki slučaj deaktiviramo tipke.
         textAlign(CENTER, CENTER);      
         stroke(183, 180, 16);
         strokeWeight(4);
@@ -1045,8 +1047,9 @@ void draw() {
     }
 }
 
-// Funkcije za pomicanje igrača. Malo zakomplicirano zbog toga da
-// pomicanje izgleda više "glatko".
+// ------------------------------------------------------------
+// Interakcija s tipkovnicom/mišem.
+// ------------------------------------------------------------
 void keyPressed() {
   if (key == CODED)
     setMove(keyCode, true);
@@ -1166,6 +1169,9 @@ void mousePressed(){
   }
 }
 
+// ------------------------------------------------------------
+// Aktivacija varijabli za pritisak tipki na tipkovnici.
+// ------------------------------------------------------------
 void setMove(int k, boolean b) {
   // Standardne left-right tipke za prvog igrača.
   // Ako je igra gotova ili je tama izgubljen život ili mso u get-ready fazi,
@@ -1271,6 +1277,14 @@ void setMove(char k, boolean b) {
     return;
   }
 }
+// ------------------------------------------------------------
+// Deaktivacija svih varijabli za pritisak tipki na tipkovnici.
+// ------------------------------------------------------------
+void unsetMoves() {
+  isLeft = isRight = isSpace = false;
+  isA = isD = isS = false;
+  isUp = isDown = isEnter = false;
+}
 
 // Funkcija koja obrađuje kraj (pobjedu) levela:
 void levelWon() {
@@ -1359,6 +1373,26 @@ void superpowerPlayerCollision(){
   }
 }
 
+// Funkcija koja pauzira igru.
+void pause_game() {
+  // Brzinu svih loptica postavljamo na 0, tako ih možemo 'pauzirati' pri završetku igre:
+  for (Ball ball : balls) {
+    ball.xVelocity = 0;
+    ball.yVelocity = 0;
+  }
+  // Završavamo efekte svih tipki:
+  unsetMoves();
+}
+
+// Funkcija koja prikazuje završni rezultat i preusmjerava na main menu:
+void game_over() {
+  is_game_over = true;
+  pause_game();
+}
+
+// ------------------------------------------------------------
+// Detekcija kolizija.
+// ------------------------------------------------------------
 // Funkcija za detekciju kolizije lopti i koplja.
 void ballSpearCollision() {
   // Za svakog igrača (prva for petlja) i svaku loptu (druga for petlja)
@@ -1376,49 +1410,7 @@ void ballSpearCollision() {
         splitBall(i, player, false);
         player.resetSpear();                
    }
-    //-------------------------
-    // STARI KOD (za svaki slučaj). Sve unutar petlje je prebačeno u funkciju splitBall(), ali može se vratiti za 
-    // slučaj da nešto ne radi kako treba. Petlja (gore) je napisana tako da ide unatrag
-    // da ne bi došlo kod problema prilikom balls.remove(i) unutar splitBall().
-    //-------------------------
-    /*for (int i = 0; i < balls.size(); ++i) {
-      if (balls.get(i).checkSpearCollision(player.xSpear, player.ySpear)) {
-        player.points += (6-balls.get(i).sizeLevel+1)*10;
-        print(player.points, "\n");
-        player.resetSpear();
-        if (balls.get(i).sizeLevel > 1) {
-          if(soundOn) {
-            player.stopSpearSound(); //prestaje reprodukcija zvuka strelice
-            collisionSound.play(); //reproduciramo zvuk pogotka
-          }
-                    
-          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, 1, -3, balls.get(i).yCenter, player.no_player));
-          balls.add(new Ball(balls.get(i).xCenter, balls.get(i).yCenter, balls.get(i).sizeLevel-1, -1, -3, balls.get(i).yCenter, player.no_player));
-        }
-        balls.remove(i);
-        if (balls.isEmpty()) levelWon();
-        return;
-      }
-    }*/
   }
-}
-
-// Funkcija koja pauzira igru.
-void pause_game() {
-  // Brzinu svih loptica postavljamo na 0, tako ih možemo 'pauzirati' pri završetku igre:
-  for (Ball ball : balls) {
-    ball.xVelocity = 0;
-    ball.yVelocity = 0;
-  }
-  // Završavamo efekte svih tipki:
-  isLeft = false; isRight = false; isSpace = false;
-  isA = false; isS = false; isD = false;
-}
-
-// Funkcija koja prikazuje završni rezultat i preusmjerava na main menu:
-void game_over() {
-  is_game_over = true;
-  pause_game();
 }
 
 // Funkcija za detekciju kolizije lopti i igrača.
