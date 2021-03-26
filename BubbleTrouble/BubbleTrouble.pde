@@ -933,10 +933,6 @@ void draw() {
     
     // Ako je igra gotova ili ako je zadnji level
     if(is_game_over || game_completed) {
-      /*if (first_over && is_game_over) {
-        for (Player player : players) player.overall_points += player.level_points;
-        first_over = false;
-      }*/
       //pamtimo koje je trenutno vrijeme
       if(!timer){
         gameover_millisecs = millis();
@@ -1025,7 +1021,9 @@ void draw() {
     // RESULTS
     // ------------------------------------------------------------
     else if (state == State.RESULTS) { 
-    
+      // Ovdje nadodajemo bodove završnog levela.
+      // (Ako ih nadodamo u game_over/game_completed fazi,
+      //  onda će nam se prikazivati 'više' bodova u stanju GAME, nego što bi trebalo)
       if (first_over) {
         for (Player player : players) player.overall_points += player.level_points;
         first_over = false;
