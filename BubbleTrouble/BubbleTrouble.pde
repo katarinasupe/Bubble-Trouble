@@ -21,11 +21,11 @@ int current_level;
 Level level;
 // Varijable koja pamti je li završen level:
 boolean level_done = false;
-boolean game_completed = false, times_up = false, time_up_over = false;
+boolean game_completed = false, times_up = false, time_up_over = false, first_over = false;
 // Varijabla u kojoj pohranjujemo mogući broj bodova.
 int max_points;
 // Varijable za pohranjivanje vremena (dovoljno je uzeti minute i sekunde):
-int minutes, seconds, millis, delay_millisecs, getReady_millisecs, levelWon_millisecs, temp_millisecs, paused_millisecs, gameover_millisecs;
+int millis, delay_millisecs, getReady_millisecs, levelWon_millisecs, temp_millisecs, paused_millisecs, gameover_millisecs;
 boolean timer = false;
 
 // Slike u INTRO stanju
@@ -122,22 +122,7 @@ int superpower_millisecs;
 void setup() {
   
   size(1280, 720);
-  current_level = 1;
-  level = new Level(1);
-  is_game_over = false;
-  game_completed  = false;
-  level_done = false;
-  lostLife = true;
-  balls.clear();
-  balls = (ArrayList<Ball>)level.balls.clone();
-  superpowers = level.superpowers;
-  // Pamtimo vrijeme početka radi kasnijeg računanja bodova:
-  minutes = minute();
-  seconds = second();
-  millis = millis();
-  paused_millisecs = 0;
-  timer = false; //ovo isto treba prebaciti u startgame
-  pause_game();
+  game_setup();
   
   // ----------------------------------------------------------
   // ---------------------UČITAVANJE SLIKA---------------------
@@ -180,15 +165,13 @@ void setup() {
   player1_images.add(loadImage("player1_back_shield.png"));//3
   player1_images.add(loadImage("player1_left_shield.png"));//4
   player1_images.add(loadImage("player1_right_shield.png"));//5
-  if(quantity == 2) {
-    player2_images = new ArrayList<PImage>();
-    player2_images.add(loadImage("player2_back.png"));//0
-    player2_images.add(loadImage("player2_left.png"));//1
-    player2_images.add(loadImage("player2_right.png"));//2
-    player2_images.add(loadImage("player2_back_shield.png"));//3
-    player2_images.add(loadImage("player2_left_shield.png"));//4
-    player2_images.add(loadImage("player2_right_shield.png"));//5 
-  }
+  player2_images = new ArrayList<PImage>();
+  player2_images.add(loadImage("player2_back.png"));//0
+  player2_images.add(loadImage("player2_left.png"));//1
+  player2_images.add(loadImage("player2_right.png"));//2
+  player2_images.add(loadImage("player2_back_shield.png"));//3
+  player2_images.add(loadImage("player2_left_shield.png"));//4
+  player2_images.add(loadImage("player2_right_shield.png"));//5 
   // ------------------------------------------------------------
   // Učitavanje slike bodlji (trebala bi već biti širine 1024, kao i gameHeight).
   // Treba resize ako se gameHeight promijeni.
@@ -269,6 +252,25 @@ void setup() {
   for (int i = 0; i < 7; ++i)
     // "Eksperimentalno" odabrana formula.
     splitBallJumpHeight[i] = (float)sq(gameHeight)/(800 + i*500);
+}
+
+// Funkcija koja postavlja inicijalne vrijednosti varijabli, vremena, lopti...
+void game_setup() {
+  current_level = 1;
+  level = new Level(1);
+  is_game_over = false;
+  game_completed  = false;
+  level_done = false;
+  lostLife = true;
+  first_over = false;
+  balls.clear();
+  balls = (ArrayList<Ball>)level.balls.clone();
+  superpowers = level.superpowers;
+  // Pamtimo vrijeme početka radi kasnijeg računanja bodova:
+  millis = millis();
+  paused_millisecs = 0;
+  timer = false; //ovo isto treba prebaciti u startgame
+  pause_game();
 }
 
 // Funkcija koja postavlja početne i krajnje koordinate teksta u INTRO stanju
@@ -899,6 +901,7 @@ void draw() {
         }
         times_up = false;
         is_game_over = _over;
+        first_over = _over;
         if (!_over) {
           for (Player player_: players){
             player_.resetPosition();
@@ -930,8 +933,10 @@ void draw() {
     
     // Ako je igra gotova ili ako je zadnji level
     if(is_game_over || game_completed) {
-      for (Player player : players) player.overall_points += player.level_points;
-      
+      /*if (first_over && is_game_over) {
+        for (Player player : players) player.overall_points += player.level_points;
+        first_over = false;
+      }*/
       //pamtimo koje je trenutno vrijeme
       if(!timer){
         gameover_millisecs = millis();
@@ -1021,6 +1026,11 @@ void draw() {
     // ------------------------------------------------------------
     else if (state == State.RESULTS) { 
     
+      if (first_over) {
+        for (Player player : players) player.overall_points += player.level_points;
+        first_over = false;
+      }
+      
       background(menuBackground);
       imageMode(CENTER);
       image(redBall, windowWidth/4, windowHeight/4);
@@ -1343,6 +1353,7 @@ void levelWon() {
   }
   else if(current_level == 5){
     game_completed = true;
+    first_over = true;
   }  
   
   pause_game();
@@ -1392,6 +1403,7 @@ void pause_game() {
 // Funkcija koja prikazuje završni rezultat i preusmjerava na main menu:
 void game_over() {
   is_game_over = true;
+  first_over = true;
   pause_game();
 }
 
