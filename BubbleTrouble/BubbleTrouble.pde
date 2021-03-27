@@ -24,6 +24,8 @@ boolean level_done = false;
 boolean game_completed = false, times_up = false, time_up_over = false, first_over = false;
 // Varijabla u kojoj pohranjujemo mogući broj bodova.
 int max_points;
+//Varijabla u kojoj pamtimo do kojeg levela je igrač došao ( za oba slucaja: 1 igrač i 2 igrača)
+int reachedLevelOnePlayer, reachedLevelTwoPlayers;
 // Varijable za pohranjivanje vremena (dovoljno je uzeti minute i sekunde):
 int millis, delay_millisecs, getReady_millisecs, levelWon_millisecs, temp_millisecs, paused_millisecs, gameover_millisecs;
 boolean timer = false;
@@ -47,6 +49,12 @@ PImage pauseImg; // Slika za 'pauza' gumb.
 PImage restartImg; // Slika za restart gumb.
 PImage thornsImg; // Slika bodlji na vrhu ekrana.
 PImage menuBackgroundSmall; // Za pokrivanje koplja, crta se u draw() kad je state == GAME.
+
+//Slike u LEVELS stanju
+ArrayList<PImage> levelNumbers;
+PImage yellowSquare;
+PImage character;
+PImage fire2;
 
 // Globalne varijable potrebne za pozicioniranje 'Bubble Trouble' teksta u INTRO stanju
 float bubbleX, bubbleY, currentBubbleY, troubleX, troubleY, currentTroubleY;
@@ -74,7 +82,8 @@ enum State {
     INSTRUCTIONS, 
     GAME,
     PAUSE,
-    RESULTS
+    RESULTS,
+    LEVELS
 }
 // Na početku igre vidimo stanje INTRO
 State state = State.INTRO; 
@@ -123,6 +132,9 @@ void setup() {
   
   size(1280, 720);
   game_setup();
+  reachedLevelOnePlayer = 1;
+  reachedLevelTwoPlayers = 1;
+  current_level = 1;
   
   // ----------------------------------------------------------
   // ---------------------UČITAVANJE SLIKA---------------------
@@ -152,6 +164,17 @@ void setup() {
   instructions = loadImage("instructions.png");
   menuButton = loadImage("menuButton.png");
   
+  
+  // -------------Učitavanje slika za LEVELS stanje-------------
+  yellowSquare = loadImage("yellowSquare.png");
+  levelNumbers = new ArrayList<PImage>();
+  levelNumbers.add(loadImage("levelNumber1.png"));
+  levelNumbers.add(loadImage("levelNumber2.png"));
+  levelNumbers.add(loadImage("levelNumber3.png"));
+  levelNumbers.add(loadImage("levelNumber4.png"));
+  levelNumbers.add(loadImage("levelNumber5.png"));
+  character = loadImage("character.png");
+  fire2 = loadImage("fire2.png");
 
   // -------------Učitavanje slika za GAME stanje-------------
   pauseImg = loadImage("pause.png");
@@ -209,7 +232,6 @@ void setup() {
   bottomWall = loadImage("bottomWall.png");
   
   // KORISTI LI SE OVO?
-  //levelImg = loadImage("level1.png");
   //levelBackground = loadImage("level1_background.png");
   
   // ------------------------------------------------------------
@@ -256,8 +278,8 @@ void setup() {
 
 // Funkcija koja postavlja inicijalne vrijednosti varijabli, vremena, lopti...
 void game_setup() {
-  current_level = 1;
-  level = new Level(1);
+  
+  level = new Level(1); //Treba ovdje nesto promijeniti??
   is_game_over = false;
   game_completed  = false;
   level_done = false;
@@ -269,7 +291,7 @@ void game_setup() {
   // Pamtimo vrijeme početka radi kasnijeg računanja bodova:
   millis = millis();
   paused_millisecs = 0;
-  timer = false; //ovo isto treba prebaciti u startgame
+  timer = false; 
   pause_game();
 }
 
@@ -345,11 +367,12 @@ void resetTransition() {
 }
 
 // Funkcija za pokretanje nove igre ovisno o odabranom broju igrača.
-void play_game(int _quantity){  
+void play_game(int _quantity, int _level){
+    current_level = _level;
     quantity = _quantity;
     createPlayers();
     state = State.GAME;
-    setup();
+    game_setup();
 }
 
 // Vraćanje u glavni izbornik tako da odabir bude defaultan
@@ -607,10 +630,12 @@ void draw() {
         switchSound.play();
       } 
       if (menuPick == MenuPick.ONEPLAYER) {
-        play_game(1);
+        quantity = 1; 
+        state = State.LEVELS;
       }
       else if (menuPick == MenuPick.TWOPLAYERS) {
-        play_game(2);
+        quantity = 2;
+        state = State.LEVELS;
       }
       else if (menuPick == MenuPick.CONTROLS) {
         state = State.INSTRUCTIONS;
@@ -683,7 +708,37 @@ void draw() {
     image(menuButton, windowWidth/2, 5*windowHeight/6); // Postavi gumb za povratak u MAINMENU
     popStyle();    
     drawTransition(); // Ulaskom u INSTRUCTIONS vidimo zidove koji se pomiču
-  } 
+  }
+  // ------------------------------------------------------------
+  // LEVELS
+  // ------------------------------------------------------------
+  else if( state == State.LEVELS) {
+    
+    background(menuBackground);
+    imageMode(CORNER);
+    image(character, windowWidth/2 - character.width - 50, windowHeight - character.height - 150);
+    float squareX = windowWidth/2;
+    float squareY = windowHeight - yellowSquare.height - 170;
+    image(yellowSquare, squareX, squareY);
+    image(menuButton, windowWidth/2 - menuButton.width/2, windowHeight - menuButton.height - 50);
+    
+    image(fire2, windowWidth/2 + yellowSquare.width + 75, windowHeight/5);
+    image(fire2, windowWidth/2 - character.width - 200, windowHeight/5);
+    
+    int max_reached_level = 0;
+    //Provjerimo koliko ima igrača jer želimo pređene levele ispisivati ovisno o broju igrača
+    if(quantity == 1) {
+      max_reached_level = reachedLevelOnePlayer;
+    } else if( quantity == 2) {
+      max_reached_level = reachedLevelTwoPlayers;
+    }
+    for(int j=0; j<max_reached_level; j++) {
+      image( levelNumbers.get(j), squareX + 37 + (64+5)*j, squareY + 37);
+    }
+    
+    drawTransition();
+    
+  }
   // ------------------------------------------------------------
   // GAME
   // ------------------------------------------------------------
@@ -1108,16 +1163,18 @@ void mousePressed(){
         resetTransition();
         if(soundOn){
           switchSound.play();
-        } 
-        play_game(1);  
+        }
+        quantity = 1;
+        state = State.LEVELS;
     }
     // 2 players
     if(overTwoPlayers(mouseX, mouseY)){
         resetTransition();
         if(soundOn){
           switchSound.play();
-        } 
-        play_game(2);
+        }
+        quantity = 2;
+        state = State.LEVELS;
     }
     // controls
     if(overControls(mouseX, mouseY)){
@@ -1178,12 +1235,12 @@ void mousePressed(){
         switchSound.play();
       }
       
-      if(players.size() == 1) play_game(1);
-      else if(players.size() == 2) play_game(2);
+      state = State.LEVELS;
   }
   
-  // Provjera je li korisnik kliknuo na gumb meni u State.RESULTS
-  if( mouseX >= (windowWidth/2 - menuButton.width/2) && mouseX <= (windowWidth/2 + menuButton.width/2) && mouseY>= (windowHeight - menuButton.height - 50) && mouseY<= (windowHeight - 50) && state == State.RESULTS) {
+  // Provjera je li korisnik kliknuo na gumb meni u State.RESULTS ili u State.LEVELS (ista je funkcija i pozicija gumba)
+  if( mouseX >= (windowWidth/2 - menuButton.width/2) && mouseX <= (windowWidth/2 + menuButton.width/2) && mouseY>= (windowHeight - menuButton.height - 50) && mouseY<= (windowHeight - 50)
+      && (state == State.RESULTS || state == State.LEVELS)) {
      if(soundOn)
        switchSound.play();
      resetGame();
@@ -1194,6 +1251,40 @@ void mousePressed(){
     introSong.stop();
     switchSound.play();
     state = State.MAINMENU;
+  }
+  
+  //Provjera na koji je level igrač kliknuo u State.LEVELS
+  if(state == State.LEVELS) {
+    float numX = windowWidth/2 + 37; //j-ti level je na numX + (64+5)*j
+    float numY = windowHeight - yellowSquare.height - 170 + 37;
+    float numSize = 64; //duljina stranice kvadratica u kojem pise level
+    
+    //provjeravamo za sve levele koji su prikazani je li kliknuto na njih ovisno o tome koliko igrača ima
+    if(quantity == 1) {
+      for(int j=0; j<reachedLevelOnePlayer; j++){
+        float levelX1 = numX + (numSize+5)*j;
+        float levelX2 = levelX1 + numSize;
+        if( mouseX >= levelX1 && mouseX<=levelX2 && mouseY>=numY && mouseY<=(numY+numSize)) {
+          resetTransition();
+          if(soundOn) {
+            switchSound.play();
+          }
+          play_game(1, j+1);
+        }
+      }
+    } else if(quantity == 2) {
+        for(int j=0; j<reachedLevelTwoPlayers; j++){
+          float levelX1 = numX + (numSize+5)*j;
+          float levelX2 = levelX1 + numSize;
+          if( mouseX >= levelX1 && mouseX<=levelX2 && mouseY>=numY && mouseY<=(numY+numSize)) {
+            resetTransition();
+            if(soundOn) {
+              switchSound.play();
+            }
+            play_game(2, j+1);
+          }
+      }    
+    }
   }
 }
 
@@ -1338,14 +1429,15 @@ void levelWon() {
   
   // Postavljamo kugle i supermoći za odgovarajući level.
   if(current_level < 5){
+    
     level = new Level(++current_level);
+    //ako smo prosli dalje nego prije, promijenimo reachedLevel ovisno o broju igrača
+    if(quantity == 1 && current_level > reachedLevelOnePlayer){ 
+      reachedLevelOnePlayer = current_level;
+    } else if (quantity == 2 && current_level > reachedLevelTwoPlayers) {
+      reachedLevelTwoPlayers = current_level;
+    }
     setLevelImg();
-    /*String levelImgName = "level" + str(current_level) + ".png";
-    try{
-      levelImg = loadImage(levelImgName);
-    } catch (Exception e) {
-      print("Slika ne postoji");
-    }*/
     balls = level.balls;
     superpowers = level.superpowers;
   }
