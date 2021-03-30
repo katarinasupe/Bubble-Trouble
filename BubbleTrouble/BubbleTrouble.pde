@@ -131,10 +131,10 @@ int superpower_millisecs;
 void setup() {
   
   size(1280, 720);
+  current_level = 1;
   game_setup();
   reachedLevelOnePlayer = 1;
-  reachedLevelTwoPlayers = 1;
-  current_level = 1;
+  reachedLevelTwoPlayers = 1;  
   
   // ----------------------------------------------------------
   // ---------------------UČITAVANJE SLIKA---------------------
@@ -230,10 +230,7 @@ void setup() {
   // -------------Učitavanje slika za tranziciju-------------
   topWall = loadImage("topWall.png");
   bottomWall = loadImage("bottomWall.png");
-  
-  // KORISTI LI SE OVO?
-  //levelBackground = loadImage("level1_background.png");
-  
+    
   // ------------------------------------------------------------
   // ---------------------UČITAVANJE FONTOVA---------------------
   // ------------------------------------------------------------
@@ -279,7 +276,7 @@ void setup() {
 // Funkcija koja postavlja inicijalne vrijednosti varijabli, vremena, lopti...
 void game_setup() {
   
-  level = new Level(1); //Treba ovdje nesto promijeniti??
+  level = new Level(current_level);
   is_game_over = false;
   game_completed  = false;
   level_done = false;

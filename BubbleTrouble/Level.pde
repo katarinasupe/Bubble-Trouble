@@ -26,7 +26,7 @@ class Level{
         
         superpowers[0] = "point";
         
-        balls.add(new Ball((windowWidth-gameWidth)/2 + 100, gameHeight/2, 2, ballXVelocity, ballYVelocity, BallColor.YELLOW));   
+        balls.add(new Ball((windowWidth-gameWidth)/2 + 100, gameHeight/2, 2, ballXVelocity, ballYVelocity, BallColor.ORANGE));   
 
         return;
       
