@@ -251,8 +251,8 @@ void setup() {
   punchSound = new SoundFile(this, path + "punch.mp3");
   levelDoneSound = new SoundFile(this, path + "end_of_level.mp3");
   onePlayerSound = new SoundFile(this, path + "onePlayer.mp3");
-  twoPlayersSound = new SoundFile(this, path + "twoPlayers1.mp3");
-  controlsSound = new SoundFile(this, path + "controls1.mp3");
+  twoPlayersSound = new SoundFile(this, path + "twoPlayers.mp3");
+  controlsSound = new SoundFile(this, path + "controls.mp3");
   
   // Želimo da intro svira samo u INTRO state-u
   if(state == State.INTRO) {
@@ -1162,7 +1162,7 @@ void mousePressed(){
         if(soundOn){
           switchSound.play();
         }
-        quantity = 1;
+        quantity = 1; //ovdje postavimo jer nam treba broj igrača da bi znali prikazati pređene levele u State.LEVELS
         state = State.LEVELS;
     }
     // 2 players
@@ -1202,7 +1202,7 @@ void mousePressed(){
      soundOn = true;
     }
   }
-  
+  //Provjera je li korisnik kliknuo na gumb menu u State.INSTRUCTIONS
   if((mouseX >= (windowWidth/2 - 80))  && (mouseX <= (windowWidth/2 + 80)) && (mouseY >= (5*windowHeight/6 - 45)) && (mouseY <= (5*windowHeight/6 + 45)) && state == State.INSTRUCTIONS) {
     resetGame();
   }
@@ -1226,7 +1226,7 @@ void mousePressed(){
     }    
   }
   
-  //Provjera je li korisnik kliknuo na resetBtn
+  //Provjera je li korisnik kliknuo na gumb reset tijekom igre
   if( mouseX >= (windowWidth - 55) && mouseX<= (windowWidth - 55 + restartImg.width) && mouseY >= 25 && mouseY <= (25 + restartImg.height) && state == State.GAME) {
       resetTransition();
       if(soundOn) {
@@ -1253,7 +1253,7 @@ void mousePressed(){
   
   //Provjera na koji je level igrač kliknuo u State.LEVELS
   if(state == State.LEVELS) {
-    float numX = windowWidth/2 + 37; //j-ti level je na numX + (64+5)*j
+    float numX = windowWidth/2 + 37; //j-ti level je na numX + (64+5)*j; 64 je sirina slicice, a 5 je razmak među njima
     float numY = windowHeight - yellowSquare.height - 170 + 37;
     float numSize = 64; //duljina stranice kvadratica u kojem pise level
     
@@ -1447,8 +1447,9 @@ void levelWon() {
   pause_game();
 }
 
+//Funkcija koja postavlja sliku za oznaku levela tijekom igre
 void setLevelImg() {
-  String levelImgName = "level" + str(current_level) + ".png";
+    String levelImgName = "level" + str(current_level) + ".png";
     try{
       levelImg = loadImage(levelImgName);
     } catch (Exception e) {
