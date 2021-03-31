@@ -853,6 +853,7 @@ void draw() {
       }
     }
     float percent = (float)remaining_millis/level.time;
+    if (level_done) percent = 1;
     fill(87, 81, 81);
     stroke(200);
     rect((windowWidth - gameWidth)/2, gameHeight+6, gameWidth, 18);
