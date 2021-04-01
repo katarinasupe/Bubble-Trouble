@@ -74,6 +74,10 @@ PFont gameFont;
 boolean isLeft, isRight, isSpace, isA, isD, isS, isUp, isDown, isEnter;
 final int ENTER_CODE = 10; // Tipka 'Enter' je specijalna tipka
 
+// Globalne varijable potrebne za provjeru koji zvuk treba svirati pri odabiru polja mišem u glavnom izborniku
+// true ako trenutno nije odabrano odgovarajuće polje, tj. tada zvuk za to polje može svirati, false inače
+boolean isOnePlayerSoundOn, isTwoPlayersSoundOn, isControlsSoundOn;
+
 // Moguća stanja programa. Ovisno o varijabli state, u draw()
 // se iscrtavaju različiti prozori.
 enum State {
@@ -260,6 +264,7 @@ void setup() {
   }
   
   setIntroCoordinates(); // Postavljamo željene koordinate animiranog teksta u INTRO
+  setMenuSwitchSounds(); // Postavljamo sve kontrolne varijable za zvuk u meniju na true
   
   // ------------------------------------------------------------
   // Računanje visina do koje loptice skaču. Varijabla i je u ovom
@@ -275,7 +280,6 @@ void setup() {
 
 // Funkcija koja postavlja inicijalne vrijednosti varijabli, vremena, lopti...
 void game_setup() {
-  
   level = new Level(current_level);
   is_game_over = false;
   game_completed  = false;
@@ -305,6 +309,13 @@ void setIntroCoordinates() {
   isGunPlaced = false;
   isBubbleGone = false;
   isTroubleGone = false;
+}
+
+// Funkcija koja postavlja početne vrijednosti globalnih varijabli za kontrolu zvuka
+void setMenuSwitchSounds() {
+  isOnePlayerSoundOn = true;
+  isTwoPlayersSoundOn = true;
+  isControlsSoundOn = true;
 }
 
 // Funkcija koja ovisno o postavljenom broju igrača, popunjava listu i podešava početne pozicije igrača
@@ -418,15 +429,37 @@ boolean overQuit(int x, int y){
 // Inače ostaje na izboru odabranom strelicama.
 void mouseUpdate(int x, int y){
   if(overOnePlayer(x, y)){
+    // Samo prilikom prvog prelaska mišom svira zvuk
+    if(isOnePlayerSoundOn) {
+      onePlayerSound.play();
+      isOnePlayerSoundOn = false; // Izgasi zvuk do ponovne promjene odabira
+      isTwoPlayersSoundOn = true; // Preostala dva sada mogu svirati pri njihovom odabiru
+      isControlsSoundOn = true;
+    }
     menuPick = MenuPick.ONEPLAYER;
   }
   else if(overTwoPlayers(x, y)){
+    if(isTwoPlayersSoundOn) {
+      twoPlayersSound.play();
+      isOnePlayerSoundOn = true;
+      isTwoPlayersSoundOn = false;
+      isControlsSoundOn = true;
+    }
     menuPick = MenuPick.TWOPLAYERS;
   }
   else if(overControls(x, y)){
+    if(isControlsSoundOn) {
+      controlsSound.play();
+      isOnePlayerSoundOn = true;
+      isTwoPlayersSoundOn = true;
+      isControlsSoundOn = false;
+    }
     menuPick = MenuPick.CONTROLS;
   }
   else if(overQuit(x, y)){
+    isOnePlayerSoundOn = true;
+    isTwoPlayersSoundOn = true;
+    isControlsSoundOn = true;
     menuPick = MenuPick.QUIT;
   }
 }
