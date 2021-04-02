@@ -430,7 +430,7 @@ boolean overQuit(int x, int y){
 void mouseUpdate(int x, int y){
   if(overOnePlayer(x, y)){
     // Samo prilikom prvog prelaska mišom svira zvuk
-    if(isOnePlayerSoundOn) {
+    if(isOnePlayerSoundOn && soundOn) {
       onePlayerSound.play();
       isOnePlayerSoundOn = false; // Izgasi zvuk do ponovne promjene odabira
       isTwoPlayersSoundOn = true; // Preostala dva sada mogu svirati pri njihovom odabiru
@@ -439,7 +439,7 @@ void mouseUpdate(int x, int y){
     menuPick = MenuPick.ONEPLAYER;
   }
   else if(overTwoPlayers(x, y)){
-    if(isTwoPlayersSoundOn) {
+    if(isTwoPlayersSoundOn && soundOn) {
       twoPlayersSound.play();
       isOnePlayerSoundOn = true;
       isTwoPlayersSoundOn = false;
@@ -448,7 +448,7 @@ void mouseUpdate(int x, int y){
     menuPick = MenuPick.TWOPLAYERS;
   }
   else if(overControls(x, y)){
-    if(isControlsSoundOn) {
+    if(isControlsSoundOn && soundOn) {
       controlsSound.play();
       isOnePlayerSoundOn = true;
       isTwoPlayersSoundOn = true;
@@ -457,9 +457,11 @@ void mouseUpdate(int x, int y){
     menuPick = MenuPick.CONTROLS;
   }
   else if(overQuit(x, y)){
-    isOnePlayerSoundOn = true;
-    isTwoPlayersSoundOn = true;
-    isControlsSoundOn = true;
+    if(soundOn) {
+      isOnePlayerSoundOn = true;
+      isTwoPlayersSoundOn = true;
+      isControlsSoundOn = true;
+    }
     menuPick = MenuPick.QUIT;
   }
 }
